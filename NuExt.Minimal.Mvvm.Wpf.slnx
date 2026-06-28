@@ -3,6 +3,11 @@
     <Project Path="samples/WpfAppSample/MovieWpfApp.csproj" />
     <Project Path="samples/WpfMultiThreadedApp/WpfMultiThreadedApp.csproj" />
   </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
+    <File Path="README.md" />
+  </Folder>
   <Project Path="benchmarks/NuExt.Minimal.Mvvm.Wpf.Benchmarks.csproj" />
   <Project Path="src/NuExt.Minimal.Mvvm.Wpf.csproj" />
   <Project Path="tests/NuExt.Minimal.Mvvm.Wpf.Tests.csproj" />
