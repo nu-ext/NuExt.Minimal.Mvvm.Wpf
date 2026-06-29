@@ -2,12 +2,13 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:nx="http://schemas.nuext.minimal/xaml"
                     xmlns:services="clr-namespace:MovieWpfApp.Services">
-    <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="pack://application:,,,/NuExt.Minimal.Mvvm.Wpf;component/Styles/Styles.xaml" />
-        <ResourceDictionary Source="pack://application:,,,/Styles/Styles.xaml" />
-    </ResourceDictionary.MergedDictionaries>
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceDictionary Source="pack://application:,,,/NuExt.Presentation.Wpf;component/Styles/Styles.xaml" />
+    <ResourceDictionary Source="pack://application:,,,/NuExt.Minimal.Mvvm.Wpf;component/Styles/Styles.xaml" />
+    <ResourceDictionary Source="pack://application:,,,/Styles/Styles.xaml" />
+  </ResourceDictionary.MergedDictionaries>
 
-    <nx:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+  <nx:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 
-    <services:MessageBoxButtonLocalizer x:Key="MessageBoxButtonLocalizer"/>
+  <services:MessageBoxButtonLocalizer x:Key="MessageBoxButtonLocalizer"/>
 </ResourceDictionary>

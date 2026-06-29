@@ -14,4 +14,3 @@ using System.Windows.Markup;
 [assembly: XmlnsDefinition("http://schemas.nuext.minimal/xaml", "Minimal.Mvvm")]
 [assembly: XmlnsDefinition("http://schemas.nuext.minimal/xaml", "Minimal.Mvvm.Wpf")]
 [assembly: XmlnsDefinition("http://schemas.nuext.minimal/xaml", "Minimal.Mvvm.Wpf.Controls")]
-[assembly: XmlnsDefinition("http://schemas.nuext.minimal/xaml", "Presentation.Wpf.Templating")]
