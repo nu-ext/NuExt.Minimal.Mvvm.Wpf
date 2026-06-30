@@ -26,7 +26,7 @@ Minimal.Mvvm.Wpf.WindowPlacementService</Description>
     <RootNamespace>Minimal.Mvvm.Wpf</RootNamespace>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591;NETSDK1233</NoWarn>
-    <VersionPrefix>0.7.5</VersionPrefix>
+    <VersionPrefix>0.7.6</VersionPrefix>
   </PropertyGroup>
 
   <ItemGroup>
@@ -35,13 +35,13 @@ Minimal.Mvvm.Wpf.WindowPlacementService</Description>
   </ItemGroup>
 
   <ItemGroup Condition="'$(NuExt_UseLocalProjects)' != 'true'">
-    <PackageReference Include="NuExt.Minimal.Mvvm" Version="0.7.4" />
-    <PackageReference Include="NuExt.Minimal.Behaviors.Wpf" Version="0.7.4" />
+    <PackageReference Include="NuExt.Minimal.Mvvm" Version="0.7.5" />
+    <PackageReference Include="NuExt.Minimal.Behaviors.Wpf" Version="0.7.5" />
     <PackageReference Include="NuExt.Minimal.Mvvm.SourceGenerator" Version="0.7.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NuExt.Presentation.Wpf" Version="0.7.4" />
+    <PackageReference Include="NuExt.Presentation.Wpf" Version="0.7.5" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(NuExt_UseLocalProjects)' == 'true'">
