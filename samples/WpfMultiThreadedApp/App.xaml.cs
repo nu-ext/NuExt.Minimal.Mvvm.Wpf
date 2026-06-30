@@ -97,6 +97,8 @@ public sealed partial class App : INamedServiceProvider
 
     private async void Application_Startup(object sender, StartupEventArgs e)
     {
+        Minimal.Mvvm.Wpf.Bootstrap.Initialize();
+
         var environmentService = new EnvironmentService(AppDomain.CurrentDomain.BaseDirectory, e.Args);
         ServiceContainer.RegisterService(environmentService);
 

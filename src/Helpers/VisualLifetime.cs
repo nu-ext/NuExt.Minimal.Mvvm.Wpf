@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows;
 
-namespace Minimal.Behaviors.Wpf;
+namespace Minimal.Mvvm.Wpf;
 
 /// <summary>
 /// Provides weak subscriptions to visual lifetime events (Loaded/Unloaded).
