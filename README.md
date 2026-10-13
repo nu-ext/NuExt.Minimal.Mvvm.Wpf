@@ -3,6 +3,7 @@
 `NuExt.Minimal.Mvvm.Wpf` is a **WPF add‑on** for the lightweight MVVM core ([NuExt.Minimal.Mvvm](https://github.com/nu-ext/NuExt.Minimal.Mvvm)). It delivers **deterministic async UX**, **predictable window and document services**, **parent–child view‑model patterns**, and **control/window‑oriented APIs**—with minimal ceremony and zero heavy dependencies.
 
 [![NuGet](https://img.shields.io/nuget/v/NuExt.Minimal.Mvvm.Wpf.svg)](https://www.nuget.org/packages/NuExt.Minimal.Mvvm.Wpf)
+[![Ask DeepWiki](https://img.shields.io/badge/Ask-DeepWiki-blue)](https://deepwiki.com/nu-ext/NuExt.Minimal.Mvvm.Wpf)
 [![Build](https://github.com/nu-ext/NuExt.Minimal.Mvvm.Wpf/actions/workflows/ci.yml/badge.svg)](https://github.com/nu-ext/NuExt.Minimal.Mvvm.Wpf/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/nu-ext/NuExt.Minimal.Mvvm.Wpf?label=license)](https://github.com/nu-ext/NuExt.Minimal.Mvvm.Wpf/blob/main/LICENSE)
 [![Downloads](https://img.shields.io/nuget/dt/NuExt.Minimal.Mvvm.Wpf.svg)](https://www.nuget.org/packages/NuExt.Minimal.Mvvm.Wpf)
