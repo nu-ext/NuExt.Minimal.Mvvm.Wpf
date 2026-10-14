@@ -1,8 +1,6 @@
-﻿using Minimal.Mvvm;
-using Minimal.Mvvm.Wpf;
-using System.IO;
-using System.Text;
+﻿using System.IO;
 using System.Text.Json;
+using Minimal.Mvvm.Wpf;
 
 namespace MovieWpfApp.Services;
 
@@ -13,9 +11,7 @@ public static class EnvironmentServiceExtensions
 {
     public static void LoadLocalization(this EnvironmentService environmentService, Type type, string culture)
     {
-        var sb = new ValueStringBuilder(16);
-        sb.Append($"local.{culture}.json");
-        var langFilePath = Path.Combine(environmentService.ConfigDirectory, sb.ToString());
+        var langFilePath = Path.Combine(environmentService.ConfigDirectory, $"local.{culture}.json");
         //Debug.Assert(File.Exists(langFilePath), $"File doesn't exist: {langFilePath}");
         if (!File.Exists(langFilePath)) return;
         var translations = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(langFilePath));
@@ -23,7 +19,7 @@ public static class EnvironmentServiceExtensions
         {
             return;
         }
-        translations = translations.ToDictionary(pair => LocalizeAttribute.StringToValidPropertyName(pair.Key), pair => pair.Value);
+        translations = translations.ToDictionary(pair => Minimal.Mvvm.LocalizeAttribute.StringToValidPropertyName(pair.Key), pair => pair.Value);
         var props = type.GetProperties();
         foreach (var prop in props)
         {

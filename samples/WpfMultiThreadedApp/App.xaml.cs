@@ -170,7 +170,7 @@ public sealed partial class App : INamedServiceProvider
         }
     }
 
-#endregion
+    #endregion
 
     #region Methods
 
@@ -232,7 +232,7 @@ public sealed partial class App : INamedServiceProvider
 
     public object? GetService(Type serviceType, string? name)
     {
-        var service = ServiceContainer.GetService(serviceType);
+        var service = ServiceContainer.GetService(serviceType, name);
         if (service != null) return service;
         try
         {
