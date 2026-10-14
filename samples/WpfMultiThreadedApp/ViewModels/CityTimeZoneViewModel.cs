@@ -1,11 +1,12 @@
 ﻿
-using Microsoft.Extensions.Logging;
-using Minimal.Mvvm;
-using Minimal.Mvvm.Wpf;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Threading;
+using Minimal.Mvvm;
+using Minimal.Mvvm.Wpf;
+using Serilog;
+using Serilog.Core;
 using WpfMultiThreadedApp.Models;
 using WpfMultiThreadedApp.Services;
 
@@ -36,7 +37,7 @@ public partial class CityTimeZoneViewModel : WindowViewModel
 
     public EnvironmentService EnvironmentService => GetService<EnvironmentService>()!;
 
-    public ILogger Logger => GetService<ILogger>()!;
+    public ILogger? Logger { get; private set; }
 
     #endregion
 
@@ -75,10 +76,12 @@ public partial class CityTimeZoneViewModel : WindowViewModel
     {
         Debug.Assert(GetDispatcherService()?.Name == "ChildDispatcherService");
         Throw.IfNull(EnvironmentService, $"{nameof(EnvironmentService)} is null");
-        Throw.IfNull(Logger, $"{nameof(Logger)} is null");
         Throw.IfNull(Parameter.TimeZoneInfo, $"{nameof(Parameter.TimeZoneInfo)} is null");
 
         await base.InitializeAsyncCore(cancellationToken);
+
+        Logger = GetService<ILogger>()?.ForContext(Constants.SourceContextPropertyName, nameof(CityTimeZoneViewModel));
+        Throw.IfNull(Logger, $"{nameof(Logger)} is null");
 
         Title = $"{Parameter.Name} - {Parameter.TimeZoneInfo!.DisplayName}";
     }
@@ -94,10 +97,7 @@ public partial class CityTimeZoneViewModel : WindowViewModel
     {
         base.OnError(ex, callerName);
 
-        if (Logger.IsEnabled(LogLevel.Error))
-        {
-            Logger.LogError(ex, "Exception in {CallerName}: {ExceptionMessage}", callerName, ex.Message);
-        }
+        Logger?.Error(ex, "Exception in {CallerName}", callerName);
     }
 
     private void UpdateTime()

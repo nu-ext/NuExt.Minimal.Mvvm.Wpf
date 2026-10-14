@@ -1,13 +1,14 @@
-﻿using Microsoft.Extensions.Logging;
-using Minimal.Mvvm;
-using Minimal.Mvvm.Wpf;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
+using Minimal.Mvvm;
+using Minimal.Mvvm.Wpf;
+using Serilog;
+using Serilog.Core;
 using WpfMultiThreadedApp.Models;
 using WpfMultiThreadedApp.Services;
 using WpfMultiThreadedApp.Views;
@@ -57,7 +58,7 @@ internal sealed partial class MainWindowViewModel : WindowViewModel
 
     public EnvironmentService EnvironmentService => GetService<EnvironmentService>()!;
 
-    public ILogger Logger => GetService<ILogger>()!;
+    public ILogger? Logger { get; private set; }
 
     public IViewWindowService? ViewWindowService => GetService<IViewWindowService>("Windows");
 
@@ -179,9 +180,11 @@ internal sealed partial class MainWindowViewModel : WindowViewModel
     {
         Debug.Assert(GetDispatcherService()?.Name == "MainDispatcherService");
         Throw.IfNull(EnvironmentService, $"{nameof(EnvironmentService)} is null");
-        Throw.IfNull(Logger, $"{nameof(Logger)} is null");
 
         await base.InitializeAsyncCore(cancellationToken);
+
+        Logger = GetService<ILogger>()?.ForContext(Constants.SourceContextPropertyName, nameof(MainWindowViewModel));
+        Throw.IfNull(Logger, $"{nameof(Logger)} is null");
 
         Lifetime.AddBracket(
             () => BindingOperations.EnableCollectionSynchronization(CitiesView, _syncLock),
@@ -218,12 +221,12 @@ internal sealed partial class MainWindowViewModel : WindowViewModel
             catch (TimeZoneNotFoundException)
             {
                 Trace.WriteLine($"Time zone not found: {timeZoneId}");
-                Logger.LogError("Time zone not found: {TimeZoneId}", timeZoneId);
+                Logger?.Error("Time zone not found: {TimeZoneId}", timeZoneId);
             }
             catch (InvalidTimeZoneException)
             {
                 Trace.WriteLine($"Invalid time zone: {timeZoneId}");
-                Logger.LogError("Invalid time zone: {TimeZoneId}", timeZoneId);
+                Logger?.Error("Invalid time zone: {TimeZoneId}", timeZoneId);
             }
             i++;
             //if (CitiesView.Count == 2) break;
@@ -308,10 +311,7 @@ internal sealed partial class MainWindowViewModel : WindowViewModel
     {
         base.OnError(ex, callerName);
 
-        if (Logger.IsEnabled(LogLevel.Error))
-        {
-            Logger.LogError(ex, "Exception in {CallerName}: {ExceptionMessage}", callerName, ex.Message);
-        }
+        Logger?.Error(ex, "Exception in {CallerName}.", callerName);
     }
 
     public void NotifyUpdateTime(CityTimeZone key, DateTime localTime)

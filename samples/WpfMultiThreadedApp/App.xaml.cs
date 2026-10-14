@@ -1,18 +1,18 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Minimal.Mvvm;
-using Minimal.Mvvm.Wpf;
-using Serilog;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Markup;
 using System.Windows.Threading;
+using Microsoft.Extensions.Configuration;
+using Minimal.Mvvm;
+using Minimal.Mvvm.Wpf;
+using Serilog;
+using Serilog.Core;
+using Serilog.Events;
 using WpfMultiThreadedApp.Services;
 using WpfMultiThreadedApp.ViewModels;
-using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace WpfMultiThreadedApp;
 
@@ -32,6 +32,8 @@ public sealed partial class App : INamedServiceProvider
     }
 
     #region Properties
+
+    public ILogger? Logger { get; private set; }
 
     public PerformanceMonitor PerformanceMonitor { get; } = new(Process.GetCurrentProcess(), CultureInfo.InvariantCulture)
     {
@@ -55,22 +57,13 @@ public sealed partial class App : INamedServiceProvider
 
     private void Application_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
-        var logger = GetService<ILogger>();
-        if (logger?.IsEnabled(LogLevel.Error) == true)
-        {
-            logger.LogError(e.Exception, "Application Dispatcher Unhandled Exception: {Exception}.", e.Exception.Message);
-        }
+        Logger?.Error(e.Exception, "Application Dispatcher Unhandled Exception.");
         e.Handled = true;
     }
 
     private void Application_Exit(object sender, ExitEventArgs e)
     {
-        var logger = GetService<ILogger>();
-
-        if (logger?.IsEnabled(LogLevel.Information) == true)
-        {
-            logger.LogInformation("Application exited with code {ExitCode}.", e.ApplicationExitCode);
-        }
+        Logger?.Information("Application exited with code {ExitCode}.", e.ApplicationExitCode);
         Log.CloseAndFlush();
     }
 
@@ -80,7 +73,7 @@ public sealed partial class App : INamedServiceProvider
         {
             return;
         }
-        var logger = GetService<ILogger>();
+
         try
         {
             await OpenWindowsService.DisposeAsync().ConfigureAwait(false);
@@ -88,10 +81,7 @@ public sealed partial class App : INamedServiceProvider
         }
         catch (Exception ex)
         {
-            if (logger?.IsEnabled(LogLevel.Error) == true)
-            {
-                logger.LogError(ex, "Application SessionEnding Exception: {Exception}.", ex.Message);
-            }
+            Logger?.Error(ex, "Application SessionEnding Exception.");
         }
     }
 
@@ -110,14 +100,12 @@ public sealed partial class App : INamedServiceProvider
             typeof(FrameworkElement),
             new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag)));
 
-
-        var logger = GetService<ILogger>();
-        logger?.LogInformation("Application started.");
+        Logger?.Information("Application started.");
 
         _lifetime.AddAsyncDisposable(OpenWindowsService);
 
-        var viewModel = new MainWindowViewModel() 
-        { 
+        var viewModel = new MainWindowViewModel()
+        {
             ParentViewModel = this,
             UseMultiThreaded = true,
             UseWindowManager = true
@@ -134,7 +122,7 @@ public sealed partial class App : INamedServiceProvider
         catch (Exception ex)
         {
             Debug.Assert(false, ex.Message);
-            logger?.LogError(ex, "Error while initialization");
+            Logger?.Error(ex, "Error while initialization");
             await viewModel.DisposeAsync();
             Shutdown();
             return;
@@ -145,7 +133,6 @@ public sealed partial class App : INamedServiceProvider
 
     private async ValueTask OnDisposingAsync(object? sender, EventArgs e, CancellationToken cancellationToken)
     {
-        var logger = GetService<ILogger>();
         try
         {
             await _lifetime.DisposeAsync().ConfigureAwait(false);
@@ -153,21 +140,14 @@ public sealed partial class App : INamedServiceProvider
         }
         catch (Exception ex)
         {
-            if (logger?.IsEnabled(LogLevel.Error) == true)
-            {
-                logger.LogError(ex, "App Disposing Exception: {Exception}.", ex.Message);
-            }
+            Logger?.Error(ex, "App Disposing Exception.");
             Debug.Fail(ex.Message);
         }
     }
 
     private void TaskScheduler_UnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
     {
-        var logger = GetService<ILogger>();
-        if (logger?.IsEnabled(LogLevel.Error) == true)
-        {
-            logger.LogError(e.Exception, "TaskScheduler Unobserved Task Exception: {Exception}.", e.Exception.Message);
-        }
+        Logger?.Error(e.Exception, "TaskScheduler Unobserved Task Exception: {Exception}.", e.Exception.Message);
     }
 
     #endregion
@@ -189,26 +169,15 @@ public sealed partial class App : INamedServiceProvider
             configuration["Serilog:WriteTo:0:Args:path"] = Path.Combine(environmentService.LogsDirectory, logPath);
         }
 
-        Log.Logger = new LoggerConfiguration()
-            .ReadFrom.Configuration(configuration)
-            .CreateLogger();
-
-        var loggerFactory = LoggerFactory.Create(builder =>
-        {
-            builder.ClearProviders();
+        var loggerConfiguration = new LoggerConfiguration().ReadFrom.Configuration(configuration);
 #if DEBUG
-            builder.SetMinimumLevel(LogLevel.Debug);
-#else
-            builder.SetMinimumLevel(LogLevel.Information);
+        loggerConfiguration.MinimumLevel.Debug();
 #endif
-            builder.AddSerilog();
-        });
+        Log.Logger = loggerConfiguration.CreateLogger();
+        ServiceContainer.RegisterService(Log.Logger);
 
-        ServiceContainer.RegisterService(loggerFactory);
-
-        var logger = loggerFactory.CreateLogger("App");
-        Debug.Assert(logger.IsEnabled(LogLevel.Debug));
-        ServiceContainer.RegisterService(logger);
+        Logger = Log.Logger.ForContext(Constants.SourceContextPropertyName, "App");
+        Debug.Assert(Logger.IsEnabled(LogEventLevel.Debug));
     }
 
     #endregion
