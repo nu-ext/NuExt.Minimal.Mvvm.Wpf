@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using System.Windows;
 
 namespace Minimal.Mvvm.Wpf;
 
@@ -11,7 +12,6 @@ namespace Minimal.Mvvm.Wpf;
 /// </summary>
 public class ViewLocator : ViewLocatorBase
 {
-    private static readonly ViewLocatorBase s_default = new ViewLocator();
     private static ViewLocatorBase? s_custom;
 
     private readonly ConcurrentDictionary<string, Type> _registeredTypes = new();
@@ -32,9 +32,9 @@ public class ViewLocator : ViewLocatorBase
     /// </summary>
     public static ViewLocatorBase Default
     {
-        get => s_custom ?? s_default;
+        get => s_custom ?? field;
         set => s_custom = value;
-    }
+    } = new ViewLocator();
 
     #endregion
 
@@ -172,7 +172,8 @@ public class ViewLocator : ViewLocatorBase
     private static bool ShouldSkipType(Type type)
     {
         // Skip abstract, interface, generic type definitions types and enums with ValueType (not Views)
-        if (type.IsAbstract || type.IsInterface || type.IsGenericTypeDefinition || type.IsValueType)
+        if (type.IsAbstract || type.IsInterface || type.IsGenericTypeDefinition || type.IsValueType ||
+            !typeof(DependencyObject).IsAssignableFrom(type))
         {
             return true;
         }
@@ -210,18 +211,20 @@ public class ViewLocator : ViewLocatorBase
     }
 
     /// <summary>
-    /// Determines whether to skip loading types from the specified assembly.
+    /// Determines whether types from the specified assembly should be excluded from view discovery.
     /// </summary>
-    private static bool ShouldSkipAssembly(Assembly assembly)
+    protected virtual bool ShouldSkipAssembly(Assembly assembly)
     {
         if (assembly.IsDynamic)
+        {
             return true;
+        }
 
-        var fullName = assembly.FullName;
-        if (fullName == null)
+        var assemblyName = assembly.GetName().Name;
+        if (assemblyName == null)
+        {
             return true;
-
-        var assemblyName = fullName.Split(',')[0];
+        }
 
         // System assemblies
         if (assemblyName.StartsWith("System.", StringComparison.Ordinal) ||
@@ -238,7 +241,7 @@ public class ViewLocator : ViewLocatorBase
             return true;
         }
 
-        // Add more known assemblies that don't contain Views
+        // Known infrastructure assemblies that do not contain Views
         if (assemblyName.StartsWith("Newtonsoft.", StringComparison.Ordinal) ||
             assemblyName.StartsWith("NLog", StringComparison.Ordinal) ||
             assemblyName.StartsWith("log4net", StringComparison.Ordinal) ||
@@ -246,7 +249,7 @@ public class ViewLocator : ViewLocatorBase
             assemblyName.StartsWith("AutoMapper", StringComparison.Ordinal) ||
             assemblyName.StartsWith("EntityFramework", StringComparison.Ordinal) ||
             assemblyName.StartsWith("Dapper", StringComparison.Ordinal) ||
-            assemblyName.StartsWith("NuExt.", StringComparison.Ordinal))
+            assemblyName.StartsWith("NuExt.System", StringComparison.Ordinal))
         {
             return true;
         }
