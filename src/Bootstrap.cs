@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Windows.Threading;
 
@@ -12,9 +13,12 @@ public static class Bootstrap
         public const int NotInitialized = 0;
         public const int Initializing = 1;
         public const int Initialized = 2;
+        public const int Failed = 3;
     }
 
     private static int s_state;
+
+    private static ExceptionDispatchInfo? s_initializationException;
 
     public static void Initialize()
     {
@@ -26,12 +30,15 @@ public static class Bootstrap
                     d.CheckAccess());
                 Minimal.Mvvm.Bootstrap.RegisterCheckAccessDelegate<DispatcherSynchronizationContext>(d =>
                     d.CheckAccess());
-                Interlocked.Exchange(ref s_state, States.Initialized);
+
+                Volatile.Write(ref s_state, States.Initialized);
                 return;
             }
             catch (Exception ex)
             {
-                Interlocked.Exchange(ref s_state, States.NotInitialized);
+                s_initializationException = ExceptionDispatchInfo.Capture(ex);
+                Volatile.Write(ref s_state, States.Failed);
+
                 var message = $"{typeof(Bootstrap).FullName}.{nameof(Initialize)}():{Environment.NewLine}{ex.Message}";
                 Trace.WriteLine(message);
                 Debug.Fail(message);
@@ -43,6 +50,12 @@ public static class Bootstrap
         while (Volatile.Read(ref s_state) == States.Initializing)
         {
             spinWait.SpinOnce();
+        }
+
+        if (Volatile.Read(ref s_state) == States.Failed)
+        {
+            Debug.Assert(s_initializationException != null);
+            s_initializationException!.Throw();
         }
     }
 }
