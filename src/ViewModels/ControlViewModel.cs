@@ -305,8 +305,14 @@ public partial class ControlViewModel : ViewModelBase, IControlViewModel
     protected virtual IDispatcherService GetDispatcherService()
     {
         var dispatcherService = DispatcherService;
-        Debug.Assert(dispatcherService != null, $"{GetType().FullName} ({DisplayName ?? "Unnamed"}) ({RuntimeHelpers.GetHashCode(this):X8}): IDispatcherService is not registered.");
-         _ = dispatcherService ?? throw new InvalidOperationException($"{GetType().FullName} ({DisplayName ?? "Unnamed"}) ({RuntimeHelpers.GetHashCode(this):X8}): IDispatcherService is not registered.");
+        if (dispatcherService is null)
+        {
+            var msg = $"{GetType().FullName} ({DisplayName ?? "Unnamed"}) ({RuntimeHelpers.GetHashCode(this):X8}): IDispatcherService is not registered.";
+            Trace.WriteLine(msg);
+            Debug.Fail(msg);
+            throw new InvalidOperationException(msg);
+        }
+
         return dispatcherService;
     }
 

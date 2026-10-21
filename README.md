@@ -1,6 +1,6 @@
 # NuExt.Minimal.Mvvm.Wpf
 
-`NuExt.Minimal.Mvvm.Wpf` is a **WPF add‑on** for the lightweight MVVM core ([NuExt.Minimal.Mvvm](https://github.com/nu-ext/NuExt.Minimal.Mvvm)). It delivers **deterministic async UX**, **predictable window and document services**, **parent–child view‑model patterns**, and **control/window‑oriented APIs**—with minimal ceremony and zero heavy dependencies.
+`NuExt.Minimal.Mvvm.Wpf` is a **WPF add-on** for the lightweight MVVM core ([NuExt.Minimal.Mvvm](https://github.com/nu-ext/NuExt.Minimal.Mvvm)). It adds View resolution, dispatcher-aware UI services, dialogs, documents, window management, and WPF-specific ViewModel infrastructure without introducing a full application framework.
 
 [![NuGet](https://img.shields.io/nuget/v/NuExt.Minimal.Mvvm.Wpf.svg)](https://www.nuget.org/packages/NuExt.Minimal.Mvvm.Wpf)
 [![Ask DeepWiki](https://img.shields.io/badge/Ask-DeepWiki-blue)](https://deepwiki.com/nu-ext/NuExt.Minimal.Mvvm.Wpf)
@@ -8,40 +8,76 @@
 [![License](https://img.shields.io/github/license/nu-ext/NuExt.Minimal.Mvvm.Wpf?label=license)](https://github.com/nu-ext/NuExt.Minimal.Mvvm.Wpf/blob/main/LICENSE)
 [![Downloads](https://img.shields.io/nuget/dt/NuExt.Minimal.Mvvm.Wpf.svg)](https://www.nuget.org/packages/NuExt.Minimal.Mvvm.Wpf)
 
----
+## Why NuExt.Minimal.Mvvm.Wpf?
+
+`NuExt.Minimal.Mvvm.Wpf` provides the WPF-specific infrastructure that a minimal MVVM core intentionally leaves out: View resolution, dispatcher-safe UI services, dialogs, tabbed and windowed documents, window lifecycle, and deterministic cleanup.
+
+UI services are attached to Views in XAML and registered in the corresponding ViewModel scope. This keeps dialogs, window management, document hosts, media controls, and other visual services close to the UI context that owns them, while allowing ViewModels to resolve them through the existing parent-aware service hierarchy.
+
+Views can be created explicitly through templates or resolved through a customizable `ViewLocator`. ViewModels, Views, document hosts, and windows follow coordinated asynchronous lifecycles, while bindings, cancellation sources, and event subscriptions have explicit ownership and cleanup.
+
+The same document contract works for tabs and independent windows, and dispatcher-aware services keep UI operations on the correct thread without requiring a full application framework, convention engine, reactive stack, or vendor-specific control suite.
+
+### How the pieces fit together
+
+```text
+View declares UI services in XAML
+    ↓
+Services register in the ViewModel's local UI scope
+    ↓
+The ViewModel resolves local, parent, or application services
+    ↓
+A View, dialog, document, or window is created explicitly
+    ↓
+The child ViewModel receives its parent and parameter
+    ↓
+Initialization completes before the UI operation continues
+    ↓
+Commands, cancellation, and close validation participate in the lifecycle
+    ↓
+Cleanup releases the owned ViewModel, bindings, subscriptions, and UI host
+```
 
 ## Highlights
 
-- **Parent–child and control/window‑oriented VMs**  
-  `ControlViewModel`/`WindowViewModel` model the UI the way WPF actually runs it: *parent–child relations*, deterministic event‑to‑command bindings via attached behaviors, and **dispatcher‑safe** operations via `IDispatcherService` (each UI thread owns its own dispatcher).
+- **Control/window-oriented ViewModels**  
+  `ControlViewModel` and `WindowViewModel` provide async lifecycle, parent–child composition, dispatcher access, service cleanup, and window close coordination.
+
+- **Attached UI services and behaviors**  
+  Dialogs, window services, document managers, media services, and behaviors are configured next to the View in XAML and become available through its ViewModel scope.
 
 - **Explicit view composition**  
   Predictable view resolution with overridable conventions and a safe fallback view. Use templates when you have them, or a customizable `ViewLocator` when you don’t have one. See **View location** below for details.
 
+- **Deterministic ownership**  
+  Views, ViewModels, bindings, subscriptions, cancellation sources, and document hosts are released in a defined order.
+
+- **Command lifecycle without reflection**  
+  ViewModels can cancel, await, requery, validate, and release their command set without discovering command properties through runtime reflection.
+
 - **Async‑first UX**  
-  Dialogs and documents are orchestrated with proper async lifecycle: view creation, VM initialization, cancellation, and clean completion—*without UI deadlocks*. `IAsyncDialogService` shows modal dialogs with typed commands/results and optional validation. `IAsyncDocumentManagerService` manages the creation/activation/closure of documents that live as windows or tabs.
+  Dialogs and documents are orchestrated through an async lifecycle that covers view creation, ViewModel initialization, cancellation, closure, and cleanup. `IAsyncDialogService` shows modal dialogs with typed commands/results and optional validation. `IAsyncDocumentManagerService` manages the creation/activation/closure of documents that live as windows or tabs.
 
 - **Deterministic windows and documents**  
-  Restore/save window position/size/state (`WindowPlacementService`). Manage **documents as windows** (`WindowedDocumentService`) or **as tabs** (`TabbedDocumentService`) using a unified `IAsyncDocument` contract (ID, title, `Show/Hide/CloseAsync`, “dispose VM on close”, optional “hide instead of close”).
+  Restore/save window position/size/state (`WindowPlacementService`). Manage **documents as windows** (`WindowedDocumentService`) or **as tabs** (`TabbedDocumentService`) using a unified `IAsyncDocument` contract (ID, title, `Show/Hide/CloseAsync`, “dispose ViewModel on close”, optional “hide instead of close”).
 
 - **Multi‑threaded WPF ready**  
   Works in multi‑UI‑thread apps (each window on its own dispatcher). `DispatcherService` is injected per thread; window‑oriented services are dispatcher‑aware by design.
 
-- **Minimal deps, performance‑oriented**  
-  No heavy external frameworks. Hot paths avoid needless allocations, lifecycle is explicit, and services/events are carefully cleaned up.
+- **Minimal dependencies, performance-oriented implementation**  
+  No full application framework or vendor-specific control suite. Hot paths avoid unnecessary allocations, reflection is kept away from command lifecycle operations, and reusable infrastructure remains explicit.
 
-- **Compatibility:**  
-  WPF on **.NET 8/9/10** and **.NET Framework 4.6.2+**. Works with any MVVM stack and pairs naturally with [`NuExt.Minimal.Mvvm`](https://github.com/nu-ext/NuExt.Minimal.Mvvm).
+## Compatibility
 
----
+- **WPF on .NET 8/9/10 and .NET Framework 4.6.2+**
 
 ## Key concepts
 
-- **Control/Window‑oriented VMs + DispatcherService** — VMs expose a *predictable* async lifecycle and run code on the owning UI thread via `IDispatcherService`. This is why the same patterns also work in **multi‑threaded WPF**, where each window has its own dispatcher.
+- **Control/Window‑oriented ViewModels + DispatcherService** — ViewModels expose a *predictable* async lifecycle and run code on the owning UI thread via `IDispatcherService`. This is why the same patterns also work in **multi‑threaded WPF**, where each window has its own dispatcher.
 
-- **IAsyncDocument + IAsyncDocumentManagerService** — a document is a *hosted view + VM* with a stable contract (`Id`, `Title`, `Show/Hide/CloseAsync`, optional “dispose VM on close”). The **manager** creates documents (`CreateDocumentAsync`), tracks `ActiveDocument`, enumerates `Documents`, supports bulk `CloseAllAsync`, and plugs into WPF as **windows** (`WindowedDocumentService`) or **tabs** (`TabbedDocumentService`).
+- **IAsyncDocument + IAsyncDocumentManagerService** — a document is a *hosted view + ViewModel* with a stable contract (`Id`, `Title`, `Show/Hide/CloseAsync`, optional “dispose ViewModel on close”). The **manager** creates documents (`CreateDocumentAsync`), tracks `ActiveDocument`, enumerates `Documents`, supports bulk `CloseAllAsync`, and plugs into WPF as **windows** (`WindowedDocumentService`) or **tabs** (`TabbedDocumentService`).
 
-- **IAsyncDialogService** — shows modal dialogs with a view resolved by name/template and a view‑model you provide; returns either a `MessageBoxResult` or a selected `UICommand`. The service handles view creation, optional title binding, validation (via `IDataErrorInfo` / `INotifyDataErrorInfo`), and clean teardown.
+- **IAsyncDialogService** — shows modal dialogs with a view resolved by name/template and a ViewModel you provide; returns either a `MessageBoxResult` or a selected `UICommand`. The service handles view creation, optional title binding, validation (via `IDataErrorInfo` / `INotifyDataErrorInfo`), and clean teardown.
 
 ## View location (predictable, overridable)
 
@@ -66,8 +102,6 @@ When no view is found (or view creation fails), a lightweight `FallbackView` is 
 - Use `WindowedDocumentService` when you manage multiple long‑lived windows as **documents** (ID reuse, ActiveDocument, bulk close).
 - Use `ViewWindowService` when you occasionally **show a view as a window** (modal/non‑modal) without keeping a document roster.
 
----
-
 ## Quick Start (practical, minimal)
 
 ### 1) Async dialog with validation + automatic window placement
@@ -91,7 +125,7 @@ When no view is found (or view creation fails), a lightweight `FallbackView` is 
   <!-- ... your content -->
 </Window>
 ```
-**ViewModel (show a dialog with a view and a VM):**
+**ViewModel (show a dialog with a View and a ViewModel):**
 ```csharp
 private IAsyncDialogService Dialogs => GetService<IAsyncDialogService>("Dialogs");
 
@@ -139,7 +173,7 @@ public async Task EditAsync(MyModel myModel, CancellationToken ct)
   </nx:WindowedDocumentService>
 </nx:Interaction.Behaviors>
 ```
-**ViewModel (find by ID or create; dispose VM on close):**
+**ViewModel (find by ID or create; dispose ViewModel on close):**
 ```csharp
 public IAsyncDocumentManagerService WindowManager => GetService<IAsyncDocumentManagerService>("Windows");
 
@@ -172,9 +206,9 @@ public async Task OpenInWindowAsync(MyModel myModel, CancellationToken ct)
 }
 ```
 
-### 3) **Parent–child helper (sticky parent binding)**
+### 3) Parent–child helper (sticky parent binding)
 
-Use `ViewModelExtensions.ParentViewModel` to set a parent VM on child view models directly in XAML; enable `StickyParentBinding="True"` to keep it in sync on every `DataContext` change.
+Use `ViewModelExtensions.ParentViewModel` to set a parent ViewModel on child ViewModels directly in XAML; enable `StickyParentBinding="True"` to keep it in sync on every `DataContext` change.
 
 ```xml
 <ContentPresenter
@@ -190,9 +224,7 @@ Each UI thread has its own `DispatcherService` instance injected via behaviors; 
 See the runnable samples:
 
 - **Multi‑threaded app**: [WpfMultiThreadedApp](https://github.com/nu-ext/NuExt.Minimal.Mvvm.Wpf/tree/main/samples/WpfMultiThreadedApp)
-- **Basic app (services/commands/VMs)**: [WpfAppSample](https://github.com/nu-ext/NuExt.Minimal.Mvvm.Wpf/tree/main/samples/WpfAppSample)
-
----
+- **Basic app (services, commands, and ViewModels)**: [WpfAppSample](https://github.com/nu-ext/NuExt.Minimal.Mvvm.Wpf/tree/main/samples/WpfAppSample)
 
 ## Installation
 
@@ -208,8 +240,12 @@ Or via Visual Studio:
 2. Search for `NuExt.Minimal.Mvvm.Wpf`.
 3. Click "Install".
 
-**Nice to have**: [NuExt.Minimal.Mvvm.SourceGenerator](https://www.nuget.org/packages/NuExt.Minimal.Mvvm.SourceGenerator) to remove boilerplate in view‑models.
-Also see [NuExt.Minimal.Mvvm.MahApps.Metro](https://www.nuget.org/packages/NuExt.Minimal.Mvvm.MahApps.Metro) - a NuGet package that provides extensions for integrating with [MahApps.Metro](https://github.com/MahApps/MahApps.Metro).
+### Recommended companions
+
+- [`NuExt.Minimal.Mvvm.SourceGenerator`](https://www.nuget.org/packages/NuExt.Minimal.Mvvm.SourceGenerator) removes ViewModel boilerplate at compile time.
+- [`NuExt.Minimal.Mvvm.MahApps.Metro`](https://www.nuget.org/packages/NuExt.Minimal.Mvvm.MahApps.Metro) adds integration with [MahApps.Metro](https://github.com/MahApps/MahApps.Metro).
+
+## Ecosystem
 
 - [NuExt.Minimal.Mvvm](https://github.com/nu-ext/NuExt.Minimal.Mvvm)
 - [NuExt.Minimal.Mvvm.SourceGenerator](https://github.com/nu-ext/NuExt.Minimal.Mvvm.SourceGenerator)

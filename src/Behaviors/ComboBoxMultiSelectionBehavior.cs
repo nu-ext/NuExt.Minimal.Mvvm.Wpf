@@ -96,8 +96,10 @@ public class ComboBoxMultiSelectionBehavior : Behavior<ComboBox>
             return;
         }
 
-        SetSelectedItems(AssociatedObject!, newItems);
-        SetSelectedItemsAsString(AssociatedObject!, newItems);
+        if (AssociatedObject is not { } comboBox) return;
+
+        SetSelectedItems(comboBox, newItems);
+        SetSelectedItemsAsString(comboBox, newItems);
     }
 
     #endregion

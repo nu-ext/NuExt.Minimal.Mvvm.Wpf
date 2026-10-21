@@ -279,6 +279,11 @@ public static class ViewModelHelper
                 DisposeOnce();
                 tcs.TrySetCanceled(cancellationToken);
             }, useSynchronizationContext: true);
+
+            if (Volatile.Read(ref disposed) != 0)
+            {
+                ctr.Dispose();
+            }
         }
 
         return tcs.Task;

@@ -167,7 +167,7 @@ public partial class InputDialog : InputDialogBase
                 if (button.Command is null && button.DataContext is UICommand command)
                 {
                     lifetime.AddBracket(() => button.Click += OnButtonClick, () => button.Click -= OnButtonClick);
-                    lifetime.AddBracket(() => button.KeyDown += OnKeyDownHandler, () => button.KeyDown += OnKeyDownHandler);
+                    lifetime.AddBracket(() => button.KeyDown += OnKeyDownHandler, () => button.KeyDown -= OnKeyDownHandler);
                 }
             }
         }

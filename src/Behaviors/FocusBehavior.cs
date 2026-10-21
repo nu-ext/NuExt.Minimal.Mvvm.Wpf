@@ -50,7 +50,7 @@ public sealed class FocusBehavior : EventBehavior<UIElement>
             case UIElement uiElement when !UseAsyncFocus:
                 Dispatcher.InvokeAsync(() =>
                 {
-                    if (IsEnabled && IsAttached && uiElement is { IsVisible: true, IsEnabled: true, Focusable: true })
+                    if (IsEnabled && IsAttached && ReferenceEquals(uiElement, AssociatedObject) && uiElement is { IsVisible: true, IsEnabled: true, Focusable: true })
                     {
                         SetFocus(uiElement);
                     }

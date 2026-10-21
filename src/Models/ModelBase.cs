@@ -84,8 +84,6 @@ public abstract class ModelBase : BindableBase
     /// </remarks>
     public void Initialize()
     {
-        if (_isInitialized) return;
-
         lock (_initLock)
         {
             if (_isInitialized) return;
@@ -104,8 +102,6 @@ public abstract class ModelBase : BindableBase
     /// </remarks>
     public void Uninitialize()
     {
-        if (!_isInitialized) return;
-
         lock (_initLock)
         {
             if (!_isInitialized) return;

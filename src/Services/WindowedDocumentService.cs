@@ -556,7 +556,7 @@ public class WindowedDocumentService : DocumentServiceBase, IAsyncDocumentManage
     }
 
 #if DEBUG
-    private static  void OnWindowSourceInitialized(object? sender, EventArgs e)
+    private static void OnWindowSourceInitialized(object? sender, EventArgs e)
     {
         Debug.Assert(((Window)sender!).DataContext == ViewModelHelper.GetViewModelFromView(((Window)sender!).Content));
     }
@@ -667,52 +667,53 @@ public class WindowedDocumentService : DocumentServiceBase, IAsyncDocumentManage
     /// <inheritdoc/>
     public async ValueTask CloseAllAsync()
     {
+        if (_documents.Count == 0)
+        {
+            return;
+        }
+
+        await Task.WhenAll(_documents.ToList().Select(async x => await x.CloseAsync().ConfigureAwait(false))).ConfigureAwait(false);
+        if (_documents.Count == 0)
+        {
+            return;
+        }
+
+        var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        void OnDocumentsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (_documents.Count == 0)
+            {
+                tcs.TrySetResult(true);
+            }
+        }
+
+        _documents.CollectionChanged += OnDocumentsCollectionChanged;
         try
         {
             if (_documents.Count == 0)
             {
-                return;
+                tcs.TrySetResult(true);
             }
-            await Task.WhenAll(_documents.ToList().Select(async x => await x.CloseAsync().ConfigureAwait(false))).ConfigureAwait(false);
-            if (_documents.Count == 0)
-            {
-                return;
-            }
-
-            var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-            void OnDocumentsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-            {
-                if (_documents.Count == 0)
-                {
-                    tcs.TrySetResult(true);
-                }
-            }
-
-            _documents.CollectionChanged += OnDocumentsCollectionChanged;
-            try
-            {
-                if (_documents.Count == 0)
-                {
-                    tcs.TrySetResult(true);
-                }
-                await tcs.Task.ConfigureAwait(false);
-            }
-            finally
-            {
-                _documents.CollectionChanged -= OnDocumentsCollectionChanged;
-            }
+            await tcs.Task.ConfigureAwait(false);
         }
         finally
         {
-            (_documents as INotifyPropertyChanged).PropertyChanged -= OnDocumentsPropertyChanged;
+            _documents.CollectionChanged -= OnDocumentsCollectionChanged;
         }
     }
 
     /// <inheritdoc/>
     public async ValueTask DisposeAsync()
     {
-        await CloseAllAsync().ConfigureAwait(false);
+        try
+        {
+            await CloseAllAsync().ConfigureAwait(false);
+        }
+        finally
+        {
+            (_documents as INotifyPropertyChanged).PropertyChanged -= OnDocumentsPropertyChanged;
+        }
         GC.SuppressFinalize(this);
     }
 

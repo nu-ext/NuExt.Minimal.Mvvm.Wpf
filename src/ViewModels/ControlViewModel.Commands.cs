@@ -114,10 +114,13 @@ partial class ControlViewModel
     }
 
     /// <summary>
-    /// Retrieves the currently executing command associated with the calling method.
+    /// Retrieves the command associated with the calling method.
     /// </summary>
     /// <param name="callerName">The name of the calling method. This parameter is automatically provided by the compiler.</param>
-    /// <returns>The <see cref="ICommand"/> associated with the calling method, or null if no command is found.</returns>
+    /// <returns>
+    /// The <see cref="ICommand"/> associated with the calling method, or <see langword="null"/>
+    /// if the command has not been created or has already been released.
+    /// </returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="callerName"/> is null or empty, or command not found.</exception>
     /// <remarks>
     /// This method uses the <see cref="CallerMemberNameAttribute"/> to determine the name of the calling method automatically,

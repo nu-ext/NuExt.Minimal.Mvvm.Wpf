@@ -26,11 +26,26 @@ public sealed class OpenWindowsService : AsyncDisposable, IOpenWindowsService
         ContinueOnCapturedContext = true;
     }
 
-    public int Count => _viewModels.Count;
+    /// <inheritdoc/>
+    public int Count
+    {
+        get
+        {
+            CheckDisposingOrDisposed();
 
-    /// <summary>
-    /// Gets open window view models.
-    /// </summary>
+            _lock.Enter();
+            try
+            {
+                return _viewModels.Count;
+            }
+            finally
+            {
+                _lock.Exit();
+            }
+        }
+    }
+
+    /// <inheritdoc/>
     public IEnumerable<IWindowViewModel> ViewModels
     {
         get
@@ -65,6 +80,7 @@ public sealed class OpenWindowsService : AsyncDisposable, IOpenWindowsService
         try
         {
             CheckDisposingOrDisposed();
+
             if (!_viewModels.Contains(viewModel))
             {
                 _viewModels.Add(viewModel);
@@ -102,6 +118,7 @@ public sealed class OpenWindowsService : AsyncDisposable, IOpenWindowsService
         try
         {
             CheckDisposingOrDisposed();
+
             removed = _viewModels.Remove(viewModel);
             if (!removed)
             {
