@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Minimal.Mvvm.Wpf;
 
 /// <summary>
-/// An abstract base class that provides methods to locate and initialize views.
+/// Provides a base implementation for locating and creating Views.
 /// </summary>
 public abstract class ViewLocatorBase
 {

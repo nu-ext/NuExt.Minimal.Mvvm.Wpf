@@ -83,7 +83,7 @@ partial class MediaElementService
     }
 
     /// <summary>
-    /// Allows the speed ration of the media to be controlled.
+    /// Allows the media playback speed ratio to be controlled.
     /// </summary>
     public double SpeedRatio
     {
@@ -103,6 +103,7 @@ partial class MediaElementService
     public void Close()
     {
         Player.Close();
+        IsMediaOpened = false;
         CurrentState = MediaState.Close;
     }
 

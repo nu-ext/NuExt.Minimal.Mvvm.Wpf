@@ -107,7 +107,7 @@ public sealed partial class MediaElementService : ServiceBase<MediaElement>, IMe
     private void OnMediaFailed(object? sender, ExceptionRoutedEventArgs e)
     {
         IsMediaOpened = false;
-        OnCurrentStateChanged();
+        CurrentState = MediaState.Stop;
     }
 
     private void OnMediaOpened(object sender, RoutedEventArgs e)

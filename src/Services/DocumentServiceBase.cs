@@ -54,7 +54,7 @@ public abstract class DocumentServiceBase : ViewServiceBase
     }
 
     /// <summary>
-    /// Gets or sets the type of the fallback view to create when a view cannot be resolved.
+    /// Gets or sets the type of the fallback View to create when no document type or View template is specified.
     /// </summary>
     public Type? FallbackViewType
     {
@@ -132,7 +132,7 @@ public abstract class DocumentServiceBase : ViewServiceBase
     /// </summary>
     /// <returns>A new view instance or <see langword="null"/> if no type is specified.</returns>
     /// <remarks>
-    /// This fallback method is invoked when primary view resolution fails. 
+    /// This method is invoked when no document type, View template, or View template selector is specified.
     /// The specified type must have a public parameterless constructor.
     /// </remarks>
     protected virtual object? CreateFallbackView()

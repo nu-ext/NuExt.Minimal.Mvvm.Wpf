@@ -95,7 +95,7 @@ public class InputDialogService : DialogServiceBase, IAsyncDialogService
     /// <param name="parentViewModel">The parent ViewModel for context.</param>
     /// <param name="parameter">The optional parameter for context.</param>
     /// <param name="cancellationToken">A token to cancel the dialog operation if needed.</param>
-    /// <returns>A <see cref="ValueTask{UICommand}"/> representing the command selected by the user.</returns>
+    /// <returns>A task whose result is the command selected by the user, or <see langword="null"/> if no command is available for the dialog result.</returns>
     public async ValueTask<UICommand?> ShowDialogAsync(IEnumerable<UICommand> dialogCommands, string? title, string? documentType, object? viewModel,
         object? parentViewModel, object? parameter, CancellationToken cancellationToken = default)
     {

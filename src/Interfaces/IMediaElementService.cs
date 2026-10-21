@@ -69,7 +69,7 @@ public interface IMediaElementService : INamedService
     TimeSpan Position { get; set; }
 
     /// <summary>
-    /// Allows the speed ration of the media to be controlled.
+    /// Allows the media playback speed ratio to be controlled.
     /// </summary>
     double SpeedRatio { get; set; }
 

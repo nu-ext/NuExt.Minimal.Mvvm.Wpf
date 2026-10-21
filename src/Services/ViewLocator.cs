@@ -8,7 +8,7 @@ using System.Windows;
 namespace Minimal.Mvvm.Wpf;
 
 /// <summary>
-/// A class that locates and initializes views based on view models, inheriting from <see cref="ViewLocatorBase"/>.
+/// Locates and creates Views by registered, short, or fully qualified type name.
 /// </summary>
 public class ViewLocator : ViewLocatorBase
 {
