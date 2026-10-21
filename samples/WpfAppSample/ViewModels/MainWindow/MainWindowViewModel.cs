@@ -30,15 +30,15 @@ internal sealed partial class MainWindowViewModel : WindowViewModel
 
     #region Services
 
-    public IAsyncDocumentManagerService? DocumentManagerService => GetService<IAsyncDocumentManagerService>("Documents");
+    public IAsyncDocumentManagerService DocumentManagerService => GetRequiredService<IAsyncDocumentManagerService>("Documents");
 
-    public EnvironmentService EnvironmentService => GetService<EnvironmentService>()!;
+    public EnvironmentService EnvironmentService => GetRequiredService<EnvironmentService>();
 
-    private MoviesService MoviesService => GetService<MoviesService>()!;
+    private MoviesService MoviesService => GetRequiredService<MoviesService>();
 
-    private SettingsService? SettingsService => GetService<SettingsService>();
+    private SettingsService SettingsService => GetRequiredService<SettingsService>();
 
-    public IAsyncDocumentManagerService? WindowManagerService => GetService<IAsyncDocumentManagerService>("Windows");
+    public IAsyncDocumentManagerService WindowManagerService => GetRequiredService<IAsyncDocumentManagerService>("Windows");
 
     #endregion
 
@@ -150,7 +150,7 @@ internal sealed partial class MainWindowViewModel : WindowViewModel
 
     protected override async ValueTask DisposeAsyncCore()
     {
-        var doc = DocumentManagerService?.FindDocumentById(default(Movies));
+        var doc = DocumentManagerService.FindDocumentById(default(Movies));
         Settings!.MoviesOpened = doc is not null;
 
         await base.DisposeAsyncCore().ConfigureAwait(false);
@@ -170,14 +170,12 @@ internal sealed partial class MainWindowViewModel : WindowViewModel
 
     protected override Task InitializeAsyncCore(CancellationToken cancellationToken)
     {
-        Debug.Assert(DocumentManagerService != null, $"{nameof(DocumentManagerService)} is null");
         Debug.Assert(EnvironmentService != null, $"{nameof(EnvironmentService)} is null");
         Debug.Assert(MoviesService != null, $"{nameof(MoviesService)} is null");
         Debug.Assert(SettingsService != null, $"{nameof(SettingsService)} is null");
-        Debug.Assert(WindowManagerService != null, $"{nameof(WindowManagerService)} is null");
-        Debug.Assert(GetDispatcherService()?.Name == "AppDispatcherService");
+        Debug.Assert(GetDispatcherService().Name == "AppDispatcherService");
 
-        Lifetime.AddAsync(DocumentManagerService!.CloseAllAsync);
+        Lifetime.AddAsync(DocumentManagerService.CloseAllAsync);
         if (DocumentManagerService is INotifyPropertyChanged notifyPropertyChanged)
         {
             Lifetime.AddBracket(
@@ -185,7 +183,7 @@ internal sealed partial class MainWindowViewModel : WindowViewModel
                 () => notifyPropertyChanged.PropertyChanged -= DocumentManagerService_PropertyChanged);
         }
 
-        Lifetime.AddAsync(WindowManagerService!.CloseAllAsync);
+        Lifetime.AddAsync(WindowManagerService.CloseAllAsync);
         if (WindowManagerService is INotifyPropertyChanged notifyPropertyChanged1)
         {
             Lifetime.AddBracket(

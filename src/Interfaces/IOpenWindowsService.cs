@@ -16,9 +16,19 @@ public interface IOpenWindowsService : IAsyncDisposable
     int Count { get; }
 
     /// <summary>
+    /// Gets a value indicating whether the service is currently being disposed.
+    /// </summary>
+    bool IsDisposing { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether the service has been disposed.
+    /// </summary>
+    bool IsDisposed { get; }
+
+    /// <summary>
     /// Gets the collection of registered window view models.
     /// </summary>
-    IEnumerable<IWindowViewModel> ViewModels { get; }
+    IEnumerable <IWindowViewModel> ViewModels { get; }
 
     /// <summary>
     /// Registers a window view model.

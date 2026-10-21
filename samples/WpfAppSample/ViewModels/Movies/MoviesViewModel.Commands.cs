@@ -13,7 +13,7 @@ partial class MoviesViewModel
 {
     #region Command Methods
 
-    private bool CanDelete() => CanEdit() && ParentViewModel?.CloseMovieCommand is not null;
+    private bool CanDelete() => CanEdit() && ParentViewModel.CloseMovieCommand is not null;
 
     [Notify(Setter = Private)]
     private async Task DeleteAsync(CancellationToken cancellationToken)
@@ -34,7 +34,7 @@ partial class MoviesViewModel
         {
             if (itemToDelete is MovieModel movie)
             {
-                await ParentViewModel!.CloseMovieCommand!.ExecuteAsync(movie, cancellationToken);
+                await ParentViewModel.CloseMovieCommand!.ExecuteAsync(movie, cancellationToken);
             }
             await ReloadMoviesAsync(cancellationToken);
             var item = Movies!.FindByPath(parentPath);
@@ -45,7 +45,7 @@ partial class MoviesViewModel
 
     private bool CanEdit()
     {
-        return IsUsable && SelectedItem?.IsEditable == true && DialogService != null;
+        return IsUsable && SelectedItem?.IsEditable == true;
     }
 
     [Notify(Setter = Private)]
@@ -59,7 +59,7 @@ partial class MoviesViewModel
                 await using (var viewModel = new InputDialogViewModel())
                 {
                     viewModel.InputMessage = Loc.Enter_new_group_name;
-                    var dlgResult = await DialogService!.ShowDialogAsync(MessageBoxButton.OKCancel,
+                    var dlgResult = await DialogService.ShowDialogAsync(MessageBoxButton.OKCancel,
                         Loc.Edit_Group, nameof(InputDialogView), viewModel, this, group.Name, cancellationToken);
                     if (dlgResult != MessageBoxResult.OK || string.IsNullOrWhiteSpace(viewModel.InputText))
                     {
@@ -72,7 +72,7 @@ partial class MoviesViewModel
 
                 await using (var viewModel = new EditMovieViewModel())
                 {
-                    var dlgResult = await DialogService!.ShowDialogAsync(MessageBoxButton.OKCancel, Loc.Edit_Movie,
+                    var dlgResult = await DialogService.ShowDialogAsync(MessageBoxButton.OKCancel, Loc.Edit_Movie,
                         nameof(EditMovieView), viewModel, this, movie, cancellationToken);
                     if (dlgResult != MessageBoxResult.OK)
                     {
@@ -95,7 +95,7 @@ partial class MoviesViewModel
 
     private bool CanNewGroup()
     {
-        return IsUsable && SelectedItem is MovieGroupModel { IsLost: false } && DialogService != null;
+        return IsUsable && SelectedItem is MovieGroupModel { IsLost: false };
     }
 
     [Notify(Setter = Private)]
@@ -104,7 +104,7 @@ partial class MoviesViewModel
         string? groupName = null;
         await using var viewModel = new InputDialogViewModel();
         viewModel.InputMessage = Loc.Enter_new_group_name;
-        var dlgResult = await DialogService!.ShowDialogAsync(MessageBoxButton.OKCancel, Loc.New_Group,
+        var dlgResult = await DialogService.ShowDialogAsync(MessageBoxButton.OKCancel, Loc.New_Group,
            nameof(InputDialogView), viewModel, this, groupName, cancellationToken);
         if (dlgResult != MessageBoxResult.OK)
         {
@@ -148,7 +148,7 @@ partial class MoviesViewModel
             Parent = SelectedItem is MovieGroupModel { IsRoot: false } group ? group : null
         };
 
-        var dlgResult = await DialogService!.ShowDialogAsync(MessageBoxButton.OKCancel, Loc.New_Movie, nameof(EditMovieView), viewModel, this, movie, cancellationToken);
+        var dlgResult = await DialogService.ShowDialogAsync(MessageBoxButton.OKCancel, Loc.New_Movie, nameof(EditMovieView), viewModel, this, movie, cancellationToken);
         if (dlgResult != MessageBoxResult.OK)
         {
             return;
@@ -173,13 +173,13 @@ partial class MoviesViewModel
     [Notify(Setter = Private)]
     private async Task OpenMovieAsync(MovieModelBase? item, CancellationToken cancellationToken)
     {
-        await ParentViewModel!.OpenMovieCommand!.ExecuteAsync((item as MovieModel)!, cancellationToken);
+        await ParentViewModel.OpenMovieCommand!.ExecuteAsync((item as MovieModel)!, cancellationToken);
     }
 
     [Notify(Setter = Private)]
     private async Task OpenMovieExternalAsync(MovieModelBase? item, CancellationToken cancellationToken)
     {
-        await ParentViewModel!.OpenMovieExternalCommand!.ExecuteAsync((item as MovieModel)!, cancellationToken);
+        await ParentViewModel.OpenMovieExternalCommand!.ExecuteAsync((item as MovieModel)!, cancellationToken);
     }
 
     private bool CanMove(MovieModelBase draggedObject)

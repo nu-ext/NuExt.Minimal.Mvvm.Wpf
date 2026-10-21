@@ -136,7 +136,7 @@ public sealed partial class App : INamedServiceProvider
         try
         {
             await _lifetime.DisposeAsync().ConfigureAwait(false);
-            Debug.Assert(OpenWindowsService.Count == 0);
+            Debug.Assert(OpenWindowsService.IsDisposed || OpenWindowsService.Count == 0);
         }
         catch (Exception ex)
         {

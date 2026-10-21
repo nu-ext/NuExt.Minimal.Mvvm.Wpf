@@ -56,7 +56,7 @@ internal sealed partial class MainWindowViewModel : WindowViewModel
 
     #region Services
 
-    public EnvironmentService EnvironmentService => GetService<EnvironmentService>()!;
+    public EnvironmentService EnvironmentService => GetRequiredService<EnvironmentService>();
 
     public ILogger? Logger { get; private set; }
 
@@ -178,7 +178,7 @@ internal sealed partial class MainWindowViewModel : WindowViewModel
 
     protected override async Task InitializeAsyncCore(CancellationToken cancellationToken)
     {
-        Debug.Assert(GetDispatcherService()?.Name == "MainDispatcherService");
+        Debug.Assert(GetDispatcherService().Name == "MainDispatcherService");
         Throw.IfNull(EnvironmentService, $"{nameof(EnvironmentService)} is null");
 
         await base.InitializeAsyncCore(cancellationToken);

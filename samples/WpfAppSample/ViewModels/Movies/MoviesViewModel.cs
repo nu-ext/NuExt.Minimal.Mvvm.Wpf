@@ -28,13 +28,13 @@ internal sealed partial class MoviesViewModel : DocumentContentViewModelBase
 
     #region Services
 
-    private IAsyncDialogService? DialogService => GetService<IAsyncDialogService>();
+    private IAsyncDialogService DialogService => GetRequiredService<IAsyncDialogService>();
 
     public EnvironmentService EnvironmentService => GetService<EnvironmentService>()!;
 
     private MoviesService MoviesService => GetService<MoviesService>()!;
 
-    private new MainWindowViewModel? ParentViewModel => base.ParentViewModel as MainWindowViewModel;
+    private new MainWindowViewModel ParentViewModel => GetParentViewModel<MainWindowViewModel>();
 
     private SettingsService? SettingsService => GetService<SettingsService>();
 

@@ -62,6 +62,7 @@ public class ListBoxSelectionBehavior : Behavior<ListBox>
 
     private void OnListBoxItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
+        // no-op yet
     }
 
     private static void OnSelectedItemsChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)

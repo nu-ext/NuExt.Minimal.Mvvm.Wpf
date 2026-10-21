@@ -13,9 +13,9 @@ public interface IViewWindowService : INamedService
     /// Creates and shows the view in a non-modal window asynchronously based on the specified parameters.
     /// </summary>
     /// <param name="viewName">The name of the view to get or create.</param>
-    /// <param name="viewModel">The view model associated with the document.</param>
-    /// <param name="parentViewModel">The parent view model of the document.</param>
-    /// <param name="parameter">Additional parameters for creating the document.</param>
+    /// <param name="viewModel">The ViewModel associated with the View.</param>
+    /// <param name="parentViewModel">The parent ViewModel.</param>
+    /// <param name="parameter">The ViewModel initialization parameter.</param>
     /// <param name="cancellationToken">Optional cancellation token to cancel the initialization process.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     ValueTask ShowAsync(string? viewName, object? viewModel, object? parentViewModel,
@@ -25,9 +25,9 @@ public interface IViewWindowService : INamedService
     /// Creates and shows the view in a modal window asynchronously based on the specified parameters.
     /// </summary>
     /// <param name="viewName">The name of the view to get or create.</param>
-    /// <param name="viewModel">The view model associated with the document.</param>
-    /// <param name="parentViewModel">The parent view model of the document.</param>
-    /// <param name="parameter">Additional parameters for creating the document.</param>
+    /// <param name="viewModel">The ViewModel associated with the View.</param>
+    /// <param name="parentViewModel">The parent ViewModel.</param>
+    /// <param name="parameter">The ViewModel initialization parameter.</param>
     /// <param name="cancellationToken">Optional cancellation token to cancel the initialization process.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     ValueTask<bool?> ShowDialogAsync(string? viewName, object? viewModel, object? parentViewModel,

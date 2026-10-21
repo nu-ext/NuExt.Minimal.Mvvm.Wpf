@@ -29,19 +29,17 @@ internal partial class MainWindowViewModel
     private void LoadSettings()
     {
         Debug.Assert(IsInitialized, $"{GetType().FullName} ({DisplayName ?? "Unnamed"}) ({GetHashCode()}) is not initialized.");
-        Debug.Assert(SettingsService != null, $"{nameof(SettingsService)} is null");
         Debug.Assert(Settings != null, $"{nameof(Settings)} is null");
         using (Settings!.SuspendDirty())
         {
-            SettingsService!.LoadSettings(Settings);
+            SettingsService.LoadSettings(Settings);
         }
     }
 
     private void SaveSettings()
     {
-        Debug.Assert(SettingsService != null, $"{nameof(SettingsService)} is null");
         Debug.Assert(Settings != null, $"{nameof(Settings)} is null");
-        if (Settings!.IsDirty && SettingsService!.SaveSettings(Settings))
+        if (Settings!.IsDirty && SettingsService.SaveSettings(Settings))
         {
             Settings.ResetDirty();
         }

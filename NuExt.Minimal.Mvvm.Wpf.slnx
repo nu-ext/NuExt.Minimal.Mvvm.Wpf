@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/Samples/">
     <Project Path="samples/WpfAppSample/MovieWpfApp.csproj" />
+    <Project Path="samples/WpfMinimalApp/WpfMinimalApp.csproj" />
     <Project Path="samples/WpfMultiThreadedApp/WpfMultiThreadedApp.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">

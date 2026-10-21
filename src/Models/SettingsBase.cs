@@ -21,9 +21,10 @@ public abstract class SettingsBase : ModelBase
     /// <summary>
     /// A helper class to manage the suspension of the "dirty" state.
     /// </summary>
-    private class DirtySuspender : IDisposable
+    private sealed class DirtySuspender : IDisposable
     {
         private readonly SettingsBase _this;
+        private int _isDisposed;
 
         public DirtySuspender(SettingsBase self)
         {
@@ -33,7 +34,10 @@ public abstract class SettingsBase : ModelBase
 
         public void Dispose()
         {
-            Interlocked.Decrement(ref _this._isDirtySuspended);
+            if (Interlocked.Exchange(ref _isDisposed, 1) == 0)
+            {
+                Interlocked.Decrement(ref _this._isDirtySuspended);
+            }
         }
     }
 

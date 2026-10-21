@@ -79,6 +79,54 @@ Cleanup releases the owned ViewModel, bindings, subscriptions, and UI host
 
 - **IAsyncDialogService** — shows modal dialogs with a view resolved by name/template and a ViewModel you provide; returns either a `MessageBoxResult` or a selected `UICommand`. The service handles view creation, optional title binding, validation (via `IDataErrorInfo` / `INotifyDataErrorInfo`), and clean teardown.
 
+### ViewModel lifecycle
+
+Use each lifecycle stage for a distinct kind of work. `LoadedCommand`, `ContentRenderedCommand`, and `ClosingCommand` participate when they are bound to the corresponding View events:
+
+```text
+Construction
+    Establish local state and command infrastructure
+        ↓
+InitializeAsyncCore
+    Resolve UI services, apply parameters, and register owned resources
+        ↓
+LoadedCommand
+    React to the View entering the visual tree
+        ↓
+ContentRenderedCommand
+    Run work that requires the Window content to be rendered
+        ↓
+ClosingCommand
+    Intercept the Window Closing event and start asynchronous closing
+        ↓
+CanCloseAsync
+    Validate or cancel the close request
+        ↓
+DisposeAsyncCore
+    Cancel pending work and release the owned resource graph
+```
+
+Register subscriptions and other acquired resources with `Lifetime` during initialization:
+
+```csharp
+protected override async Task InitializeAsyncCore(CancellationToken cancellationToken)
+{
+    await base.InitializeAsyncCore(cancellationToken);
+
+    var source = ...
+    var resource = ...
+
+    Lifetime.AddBracket(
+        () => source.PropertyChanged += OnPropertyChanged,
+        () => source.PropertyChanged -= OnPropertyChanged);
+
+    Lifetime.Add(resource);
+    Lifetime.AddAsync(ReleaseAsync);
+}
+```
+
+Cleanup operations are executed in reverse registration order. Register resources in acquisition order so dependent resources are released before the resources they depend on.
+
 ## View location (predictable, overridable)
 
 Views are resolved in a strict order by the window/document services:
@@ -94,13 +142,35 @@ if (Minimal.Mvvm.Wpf.ViewLocator.Default is Minimal.Mvvm.Wpf.ViewLocator v)
 }
 ```
 **Fallback view**
-When no view is found (or view creation fails), a lightweight `FallbackView` is created with a readable error text. Override `ViewLocatorBase` or assign `ViewLocator.Default` if you need full control over lookup rules. If you need to alter caches or registrations during long‑running sessions, the built‑in locator also exposes `ClearCache()` and `ClearRegisteredTypes()`.
+When no View type is found, a lightweight `FallbackView` is created with a readable error message. If the View type is found but cannot be instantiated, the locator throws an `InvalidOperationException` at runtime and preserves the original exception as its inner exception. Override `ViewLocatorBase` or assign `ViewLocator.Default` if you need full control over lookup and creation.
+
+The built-in locator also exposes `ClearCache()` and `ClearRegisteredTypes()` for applications that change registrations or load Views dynamically.
 
 ## Windowed vs ViewWindowService
 
 **When to use which:**
 - Use `WindowedDocumentService` when you manage multiple long‑lived windows as **documents** (ID reuse, ActiveDocument, bulk close).
 - Use `ViewWindowService` when you occasionally **show a view as a window** (modal/non‑modal) without keeping a document roster.
+
+### Show a standalone window
+
+Use `ViewWindowService` when the window does not need document identity, reuse, active-document tracking, or bulk close operations.
+
+```csharp
+private IViewWindowService ViewWindowService => GetRequiredService<IViewWindowService>();
+
+private ValueTask ShowDetailsAsync(DetailsModel details, CancellationToken cancellationToken)
+{
+    return ViewWindowService.ShowAsync(
+        viewName: nameof(DetailsView),
+        viewModel: new DetailsWindowViewModel(),
+        parentViewModel: this,
+        parameter: details,
+        cancellationToken: cancellationToken);
+}
+```
+
+A `WindowViewModel` coordinates closing and disposal when the created Window includes a `WindowService` bound to `ClosingCommand`. `ViewWindowService` manages the View and Window infrastructure but does not take ownership of an arbitrary disposable ViewModel.
 
 ## Quick Start (practical, minimal)
 
@@ -112,7 +182,8 @@ When no view is found (or view creation fails), a lightweight `FallbackView` is 
   ...
   xmlns:nx="http://schemas.nuext.minimal/xaml">
   <nx:Interaction.Behaviors>
-    <nx:WindowService/>
+    <nx:DispatcherService/>
+    <nx:WindowService ClosingCommand="{Binding ClosingCommand}"/>
     <nx:InputDialogService
         x:Name="Dialogs"
         MessageBoxButtonLocalizer="{StaticResource MessageBoxButtonLocalizer}"
@@ -127,7 +198,7 @@ When no view is found (or view creation fails), a lightweight `FallbackView` is 
 ```
 **ViewModel (show a dialog with a View and a ViewModel):**
 ```csharp
-private IAsyncDialogService Dialogs => GetService<IAsyncDialogService>("Dialogs");
+private IAsyncDialogService Dialogs => GetRequiredService<IAsyncDialogService>("Dialogs");
 
 public async Task EditAsync(MyModel myModel, CancellationToken ct)
 {
@@ -161,7 +232,8 @@ public async Task EditAsync(MyModel myModel, CancellationToken ct)
           <Setter.Value>
             <DataTemplate>
               <ItemsControl>
-                <nx:WindowService Name="CurrentWindowService"/>
+                <nx:WindowService Name="CurrentWindowService"
+                                  ClosingCommand="{Binding ClosingCommand}"/>
                 <nx:EventToCommand EventName="ContentRendered"
                                    Command="{Binding ContentRenderedCommand}"/>
               </ItemsControl>
@@ -175,32 +247,18 @@ public async Task EditAsync(MyModel myModel, CancellationToken ct)
 ```
 **ViewModel (find by ID or create; dispose ViewModel on close):**
 ```csharp
-public IAsyncDocumentManagerService WindowManager => GetService<IAsyncDocumentManagerService>("Windows");
+public IAsyncDocumentManagerService WindowManager =>
+    GetRequiredService<IAsyncDocumentManagerService>("Windows");
 
 public async Task OpenInWindowAsync(MyModel myModel, CancellationToken ct)
 {
     var doc = await WindowManager.FindDocumentByIdOrCreateAsync(
         id: myModel.Id,
-        createDocumentCallback: async mgr =>
-        {
-            var vm = new MyModelViewModel();
-            try
-            {
-                var d = await mgr.CreateDocumentAsync(
-                    documentType: "MyModelView",
-                    viewModel: vm,
-                    parentViewModel: this,
-                    parameter: myModel,
-                    cancellationToken: ct);
-                d.DisposeOnClose = true;
-                return d;
-            }
-            catch
-            {
-                await vm.DisposeAsync();
-                throw;
-            }
-        });
+        documentType: "MyModelView",
+        viewModelFactory: static () => new MyModelViewModel(),
+        parentViewModel: this,
+        parameter: myModel,
+        cancellationToken: ct);
 
     doc.Show();
 }
@@ -221,10 +279,12 @@ Use `ViewModelExtensions.ParentViewModel` to set a parent ViewModel on child Vie
 ### 4) Multi‑threaded WPF (per‑thread dispatcher, window‑oriented services)
 
 Each UI thread has its own `DispatcherService` instance injected via behaviors; window‑oriented services (`ViewWindowService` / `WindowedDocumentService`) are dispatcher‑aware and safe to call on the owning thread.
-See the runnable samples:
 
-- **Multi‑threaded app**: [WpfMultiThreadedApp](https://github.com/nu-ext/NuExt.Minimal.Mvvm.Wpf/tree/main/samples/WpfMultiThreadedApp)
-- **Basic app (services, commands, and ViewModels)**: [WpfAppSample](https://github.com/nu-ext/NuExt.Minimal.Mvvm.Wpf/tree/main/samples/WpfAppSample)
+## Samples
+
+- **[WpfMinimalApp](https://github.com/nu-ext/NuExt.Minimal.Mvvm.Wpf/tree/main/samples/WpfMinimalApp)** — minimal View, ViewModel, command, and dialog workflow.
+- **[WpfAppSample](https://github.com/nu-ext/NuExt.Minimal.Mvvm.Wpf/tree/main/samples/WpfAppSample)** — dialogs, settings, tabbed and windowed documents, View resolution, and application services.
+- **[WpfMultiThreadedApp](https://github.com/nu-ext/NuExt.Minimal.Mvvm.Wpf/tree/main/samples/WpfMultiThreadedApp)** — multiple WPF UI threads, dispatcher-local services, runtime behavior composition, and coordinated shutdown.
 
 ## Installation
 

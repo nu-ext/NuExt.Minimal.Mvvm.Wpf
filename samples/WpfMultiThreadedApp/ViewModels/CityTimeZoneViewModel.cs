@@ -29,7 +29,7 @@ public partial class CityTimeZoneViewModel : WindowViewModel
 
     public new CityTimeZone Parameter => (CityTimeZone)base.Parameter!;
 
-    private new MainWindowViewModel ParentViewModel => (MainWindowViewModel)base.ParentViewModel!;
+    private new MainWindowViewModel ParentViewModel => GetParentViewModel<MainWindowViewModel>();
 
     #endregion
 
@@ -74,7 +74,7 @@ public partial class CityTimeZoneViewModel : WindowViewModel
 
     protected override async Task InitializeAsyncCore(CancellationToken cancellationToken)
     {
-        Debug.Assert(GetDispatcherService()?.Name == "ChildDispatcherService");
+        Debug.Assert(GetDispatcherService().Name == "ChildDispatcherService");
         Throw.IfNull(EnvironmentService, $"{nameof(EnvironmentService)} is null");
         Throw.IfNull(Parameter.TimeZoneInfo, $"{nameof(Parameter.TimeZoneInfo)} is null");
 

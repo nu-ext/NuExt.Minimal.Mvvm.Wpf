@@ -163,7 +163,7 @@ public sealed partial class App : IServiceProvider, IDispatcherObject
         try
         {
             await _lifetime.DisposeAsync().ConfigureAwait(false);
-            Debug.Assert(OpenWindowsService.Count == 0);
+            Debug.Assert(OpenWindowsService.IsDisposed || OpenWindowsService.Count == 0);
         }
         catch (Exception ex)
         {
