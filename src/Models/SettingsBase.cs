@@ -51,34 +51,32 @@ public abstract class SettingsBase : ModelBase
     [JsonExtensionData]
     public Dictionary<string, JsonElement>? AdditionalData { get; set; }
 
-    private bool _isDirty;
     /// <summary>
     /// Gets a value indicating whether the object has been modified since its creation or last reset.
     /// </summary>
     [JsonIgnore]
     public bool IsDirty
     {
-        get => _isDirty;
+        get;
         private set
         {
-            if (_isDirty == value) return;
-            _isDirty = value;
+            if (field == value) return;
+            field = value;
             OnPropertyChanged(EventArgsCache.IsDirtyPropertyChanged);
         }
     }
 
-    private bool _isSuspended;
     /// <summary>
     /// Gets a value indicating whether property changes are currently suspended.
     /// </summary>
     [JsonIgnore]
     public bool IsSuspended
     {
-        get => _isSuspended;
+        get;
         private set
         {
-            if (_isSuspended == value) return;
-            _isSuspended = value;
+            if (field == value) return;
+            field = value;
             OnPropertyChanged(EventArgsCache.IsSuspendedPropertyChanged);
         }
     }

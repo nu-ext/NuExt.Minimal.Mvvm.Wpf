@@ -5,28 +5,11 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <ImplicitUsings>disable</ImplicitUsings>
-    <Description>NuExt.Minimal.Mvvm.Wpf is an extension for the lightweight MVVM framework NuExt.Minimal.Mvvm, specifically designed for WPF applications.
-
-Commonly Used Types:
-Minimal.Mvvm.ModelBase
-Minimal.Mvvm.Wpf.ControlViewModel
-Minimal.Mvvm.Wpf.DocumentContentViewModelBase
-Minimal.Mvvm.Wpf.WindowViewModel
-Minimal.Mvvm.Wpf.IAsyncDialogService
-Minimal.Mvvm.Wpf.IAsyncDocument
-Minimal.Mvvm.Wpf.IAsyncDocumentContent
-Minimal.Mvvm.Wpf.IAsyncDocumentManagerService
-Minimal.Mvvm.Wpf.InputDialogService
-Minimal.Mvvm.Wpf.OpenWindowsService
-Minimal.Mvvm.Wpf.SettingsService
-Minimal.Mvvm.Wpf.TabbedDocumentService
-Minimal.Mvvm.Wpf.ViewLocator
-Minimal.Mvvm.Wpf.WindowedDocumentService
-Minimal.Mvvm.Wpf.WindowPlacementService</Description>
+    <Description>A lightweight WPF add-on for NuExt.Minimal.Mvvm, providing View resolution, dispatcher-aware UI services, dialogs, documents, window lifecycle management, settings, and deterministic cleanup.</Description>
     <RootNamespace>Minimal.Mvvm.Wpf</RootNamespace>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591;NETSDK1233</NoWarn>
-    <VersionPrefix>0.7.9</VersionPrefix>
+    <VersionPrefix>0.7.10</VersionPrefix>
   </PropertyGroup>
 
   <ItemGroup>
@@ -41,7 +24,7 @@ Minimal.Mvvm.Wpf.WindowPlacementService</Description>
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NuExt.Presentation.Wpf" Version="0.7.8" />
+    <PackageReference Include="NuExt.Presentation.Wpf" Version="0.7.9" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(NuExt_UseLocalProjects)' == 'true'">
