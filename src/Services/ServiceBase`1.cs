@@ -48,7 +48,7 @@ public abstract class ServiceBase<T> : Behavior<T> where T : FrameworkElement
     /// </summary>
     public string? Name
     {
-        get => (string)GetValue(NameProperty);
+        get => (string?)GetValue(NameProperty);
         set => SetValue(NameProperty, value);
     }
 

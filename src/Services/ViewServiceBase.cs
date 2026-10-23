@@ -86,7 +86,7 @@ public abstract class ViewServiceBase : ServiceBase<Control>, IDispatcherObject
     /// </summary>
     public string? ViewTemplateKey
     {
-        get => (string)GetValue(ViewTemplateKeyProperty);
+        get => (string?)GetValue(ViewTemplateKeyProperty);
         set => SetValue(ViewTemplateKeyProperty, value);
     }
 

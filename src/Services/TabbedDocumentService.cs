@@ -299,7 +299,7 @@ public class TabbedDocumentService : DocumentServiceBase, IAsyncDocumentManagerS
                             continue;
                         }
                         var document = GetDocument(tab);
-                        Debug.Assert(document is null);
+                        Debug.Assert(document is null, "The document associated with the removed tab should already be absent from the document collection.");
                         if (document is not null)
                         {
                             try
@@ -430,7 +430,7 @@ public class TabbedDocumentService : DocumentServiceBase, IAsyncDocumentManagerS
         {
             return;
         }
-        await Task.WhenAll(_documents.ToList().Select(async x => await x.CloseAsync().ConfigureAwait(false))).ConfigureAwait(false);
+        await Task.WhenAll(_documents.ToList().Select(async x => await x.CloseAsync(force: true).ConfigureAwait(false))).ConfigureAwait(false);
         if (_documents.Count == 0)
         {
             return;
@@ -480,6 +480,7 @@ public class TabbedDocumentService : DocumentServiceBase, IAsyncDocumentManagerS
     {
         base.OnAttached();
         Debug.Assert(_subscription == null);
+
         if (AssociatedObject!.IsLoaded)
         {
             Disposable.DisposeAndNull(ref _subscription);
@@ -495,8 +496,8 @@ public class TabbedDocumentService : DocumentServiceBase, IAsyncDocumentManagerS
     protected override void OnDetaching()
     {
         AssociatedObject!.Loaded -= OnTabControlLoaded;
-        Debug.Assert(_subscription != null);
         Disposable.DisposeAndNull(ref _subscription);
+
         base.OnDetaching();
     }
 

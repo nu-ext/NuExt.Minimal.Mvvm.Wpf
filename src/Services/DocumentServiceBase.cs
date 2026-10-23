@@ -49,7 +49,7 @@ public abstract class DocumentServiceBase : ViewServiceBase
     /// </value>
     public IAsyncDocument? ActiveDocument
     {
-        get => (IAsyncDocument)GetValue(ActiveDocumentProperty);
+        get => (IAsyncDocument?)GetValue(ActiveDocumentProperty);
         set => SetValue(ActiveDocumentProperty, value);
     }
 
@@ -58,7 +58,7 @@ public abstract class DocumentServiceBase : ViewServiceBase
     /// </summary>
     public Type? FallbackViewType
     {
-        get => (Type)GetValue(FallbackViewTypeProperty);
+        get => (Type?)GetValue(FallbackViewTypeProperty);
         set => SetValue(FallbackViewTypeProperty, value);
     }
 

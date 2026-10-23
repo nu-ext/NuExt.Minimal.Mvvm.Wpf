@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Windows;
 
@@ -30,6 +31,7 @@ public class ViewLocator : ViewLocatorBase
     /// <summary>
     /// Gets or sets the default instance of the <see cref="ViewLocatorBase"/>.
     /// </summary>
+    [AllowNull]
     public static ViewLocatorBase Default
     {
         get => s_custom ?? field;

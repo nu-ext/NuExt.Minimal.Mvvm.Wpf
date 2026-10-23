@@ -148,17 +148,15 @@ public sealed class OpenWindowsService : AsyncDisposable, IOpenWindowsService
         Debug.Assert(CheckAccess());
         VerifyAccess();
 
-        bool removed = false;
+        List<Exception>? exceptions = null;
         await _lock.EnterAsync();
         try
         {
-            List<Exception>? exceptions = null;
             for (int i = _viewModels.Count - 1; i >= 0; i--)
             {
                 try
                 {
                     await _viewModels[i].CloseAsync(force: true);
-                    removed = true;
                 }
                 catch (Exception ex)
                 {
@@ -166,22 +164,20 @@ public sealed class OpenWindowsService : AsyncDisposable, IOpenWindowsService
                     exceptions.Add(ex);
                 }
             }
-            if (exceptions is not null)
-            {
-                throw new AggregateException(exceptions);
-            }
             //Debug.Assert(_viewModels.Count == 0);
             _viewModels.Clear();
         }
         finally
         {
             _lock.Exit();
+            _lock.Dispose();
         }
-        _lock.Dispose();
 
-        if (removed)
+        OnPropertyChanged(EventArgsCache.CountPropertyChanged);
+
+        if (exceptions is not null)
         {
-            OnPropertyChanged(EventArgsCache.CountPropertyChanged);
+            throw new AggregateException(exceptions);
         }
     }
 }

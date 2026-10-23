@@ -5,7 +5,7 @@ using MovieWpfApp.Views;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
-using static AccessModifier;
+using static Minimal.Mvvm.AccessModifier;
 
 namespace MovieWpfApp.ViewModels;
 

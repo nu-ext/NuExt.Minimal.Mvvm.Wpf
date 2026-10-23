@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
-using static AccessModifier;
+using static Minimal.Mvvm.AccessModifier;
 
 namespace MovieWpfApp.ViewModels;
 

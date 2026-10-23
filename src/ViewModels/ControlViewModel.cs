@@ -263,9 +263,7 @@ public partial class ControlViewModel : ViewModelBase, IControlViewModel
             Disposing = null;
             _state = States.Disposed;
             GC.SuppressFinalize(this);
-            OnPropertyChanged(EventArgsCache.IsDisposingPropertyChanged);
-            OnPropertyChanged(EventArgsCache.IsDisposedPropertyChanged);
-            ClearPropertyChangedHandlers();// Clear all event subscribers to prevent memory leaks
+            RaisePropertiesChangedAndClearHandlers(EventArgsCache.IsDisposingPropertyChanged, EventArgsCache.IsDisposedPropertyChanged);
         }
     }
 

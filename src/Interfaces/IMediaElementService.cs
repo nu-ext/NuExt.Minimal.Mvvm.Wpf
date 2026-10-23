@@ -4,10 +4,24 @@ using System.Windows.Input;
 
 namespace Minimal.Mvvm.Wpf;
 
+/// <summary>
+/// Defines a service for controlling media playback and exposing media state.
+/// </summary>
 public interface IMediaElementService : INamedService
 {
+    /// <summary>
+    /// Gets the command that pauses media playback.
+    /// </summary>
     ICommand PauseCommand { get; }
+
+    /// <summary>
+    /// Gets the command that starts or resumes media playback.
+    /// </summary>
     ICommand PlayCommand { get; }
+
+    /// <summary>
+    /// Gets the command that stops media playback.
+    /// </summary>
     ICommand StopCommand { get; }
 
     /// <summary>

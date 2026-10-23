@@ -62,7 +62,7 @@ public class ListBoxSelectionBehavior : Behavior<ListBox>
 
     private void OnListBoxItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        // no-op yet
+        SelectItemsInView(SelectedItems);
     }
 
     private static void OnSelectedItemsChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
@@ -79,8 +79,11 @@ public class ListBoxSelectionBehavior : Behavior<ListBox>
     protected override void OnAttached()
     {
         base.OnAttached();
+
         AssociatedObject!.SelectionChanged += OnListBoxSelectionChanged;
         ((INotifyCollectionChanged)AssociatedObject.Items).CollectionChanged += OnListBoxItemsCollectionChanged;
+
+        SelectItemsInView(SelectedItems);
     }
 
     /// <inheritdoc />
@@ -91,6 +94,7 @@ public class ListBoxSelectionBehavior : Behavior<ListBox>
             AssociatedObject.SelectionChanged -= OnListBoxSelectionChanged;
             ((INotifyCollectionChanged)AssociatedObject.Items).CollectionChanged -= OnListBoxItemsCollectionChanged;
         }
+
         base.OnDetaching();
     }
 

@@ -1,8 +1,8 @@
-﻿using Minimal.Mvvm;
-using Minimal.Mvvm.Wpf;
+﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.Text.Json.Serialization;
-using System.Windows;
+using Minimal.Mvvm;
+using Minimal.Mvvm.Wpf;
 
 namespace MovieWpfApp.Models;
 

@@ -34,7 +34,7 @@ public class SettingsService : ServiceBase<FrameworkElement>, ISettingsService
     /// </summary>
     public string? Prefix
     {
-        get => (string)GetValue(PrefixProperty);
+        get => (string?)GetValue(PrefixProperty);
         set => SetValue(PrefixProperty, value);
     }
 

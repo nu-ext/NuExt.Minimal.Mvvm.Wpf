@@ -7,12 +7,12 @@ namespace Minimal.Mvvm.Wpf;
 /// </summary>
 public sealed class BooleanInverterConverter : ValueConverterBase<bool, bool, object?>
 {
-    protected override bool ConvertTo(bool value, object? parameter, CultureInfo? culture)
+    protected override bool ConvertTo(bool value, object? parameter, CultureInfo culture)
     {
         return !value;
     }
 
-    protected override bool ConvertFrom(bool value, object? parameter, CultureInfo? culture)
+    protected override bool ConvertFrom(bool value, object? parameter, CultureInfo culture)
     {
         return !value;
     }

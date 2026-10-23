@@ -1,12 +1,12 @@
-﻿using Minimal.Behaviors.Wpf;
-using Presentation.Wpf;
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Minimal.Behaviors.Wpf;
+using Presentation.Wpf;
 
 namespace Minimal.Mvvm.Wpf;
 
@@ -136,6 +136,7 @@ public class TreeViewDragDropBehavior : Behavior<TreeView>
     {
         base.OnAttached();
         Debug.Assert(_subscription == null);
+
         if (AssociatedObject!.IsLoaded)
         {
             Disposable.DisposeAndNull(ref _subscription);
@@ -151,8 +152,8 @@ public class TreeViewDragDropBehavior : Behavior<TreeView>
     protected override void OnDetaching()
     {
         AssociatedObject!.Loaded -= OnTreeViewLoaded;
-        Debug.Assert(_subscription != null);
         Disposable.DisposeAndNull(ref _subscription);
+
         base.OnDetaching();
     }
 

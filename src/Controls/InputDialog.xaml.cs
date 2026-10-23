@@ -58,7 +58,7 @@ public partial class InputDialog : InputDialogBase
     /// </summary>
     public IEnumerable? CommandsSource
     {
-        get => (IEnumerable)GetValue(CommandsSourceProperty);
+        get => (IEnumerable?)GetValue(CommandsSourceProperty);
         set => SetValue(CommandsSourceProperty, value);
     }
 
@@ -148,17 +148,13 @@ public partial class InputDialog : InputDialogBase
         };
     }
 
-    private Lifetime SubscribeMetroDialog(CancellationToken cancellationToken)
+    private Lifetime SubscribeMetroDialog()
     {
         var lifetime = new Lifetime()
 #if DEBUG
                 .SetDebugInfo()
 #endif
             ;
-        if (cancellationToken.CanBeCanceled)
-        {
-            lifetime.AddDisposable(cancellationToken.Register(Close, useSynchronizationContext: true));
-        }
 
         if (DialogBottom != null && DialogButtons != null)
         {
@@ -179,15 +175,13 @@ public partial class InputDialog : InputDialogBase
 
     public UICommand? ShowDialog(CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        using var cancellationRegistration = cancellationToken.CanBeCanceled
+            ? cancellationToken.Register(Close, useSynchronizationContext: true)
+            : default;
+
         Lifetime? subscription = null;
-        void OnDialogContentRendered(object? sender, EventArgs e)
-        {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                return;
-            }
-            subscription ??= SubscribeMetroDialog(cancellationToken);
-        }
         ContentRendered += OnDialogContentRendered;
         try
         {
@@ -204,6 +198,11 @@ public partial class InputDialog : InputDialogBase
         {
             ContentRendered -= OnDialogContentRendered;
             Disposable.DisposeAndNull(ref subscription);
+        }
+
+        void OnDialogContentRendered(object? sender, EventArgs e)
+        {
+            subscription ??= SubscribeMetroDialog();
         }
     }
 

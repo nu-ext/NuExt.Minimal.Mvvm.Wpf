@@ -672,7 +672,7 @@ public class WindowedDocumentService : DocumentServiceBase, IAsyncDocumentManage
             return;
         }
 
-        await Task.WhenAll(_documents.ToList().Select(async x => await x.CloseAsync().ConfigureAwait(false))).ConfigureAwait(false);
+        await Task.WhenAll(_documents.ToList().Select(async x => await x.CloseAsync(force: true).ConfigureAwait(false))).ConfigureAwait(false);
         if (_documents.Count == 0)
         {
             return;

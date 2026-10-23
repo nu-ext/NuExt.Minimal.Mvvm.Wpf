@@ -28,7 +28,7 @@ public sealed class BooleanToVisibilityConverter : ValueConverterBase<bool, Visi
     /// <param name="parameter">An optional parameter to use in the converter. Not used in this implementation.</param>
     /// <param name="culture">The culture to use in the converter. Not used in this implementation.</param>
     /// <returns>A <see cref="Visibility"/> value based on the boolean input value and the current settings of <see cref="HideInsteadOfCollapse"/> and <see cref="Invert"/>.</returns>
-    protected override Visibility ConvertTo(bool value, object? parameter, CultureInfo? culture)
+    protected override Visibility ConvertTo(bool value, object? parameter, CultureInfo culture)
     {
         return (value ^ Invert) ? Visibility.Visible : HideInsteadOfCollapse ? Visibility.Hidden : Visibility.Collapsed;
     }
@@ -40,7 +40,7 @@ public sealed class BooleanToVisibilityConverter : ValueConverterBase<bool, Visi
     /// <param name="parameter">An optional parameter to use in the converter. Not used in this implementation.</param>
     /// <param name="culture">The culture to use in the converter. Not used in this implementation.</param>
     /// <returns>A boolean value based on the <see cref="Visibility"/> input value and the current setting of <see cref="Invert"/>.</returns>
-    protected override bool ConvertFrom(Visibility value, object? parameter, CultureInfo? culture)
+    protected override bool ConvertFrom(Visibility value, object? parameter, CultureInfo culture)
     {
         return (value == Visibility.Visible) ^ Invert;
     }

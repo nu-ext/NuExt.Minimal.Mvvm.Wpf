@@ -14,11 +14,8 @@ public abstract class InputDialogBase : Window
     #region Dependency Properties
 
     /// <summary>Identifies the <see cref="DialogBottom"/> dependency property.</summary>
-    public static readonly DependencyProperty DialogBottomProperty
-        = DependencyProperty.Register(nameof(DialogBottom),
-            typeof(object),
-            typeof(InputDialogBase),
-            new PropertyMetadata(null, UpdateLogicalChild));
+    public static readonly DependencyProperty DialogBottomProperty = DependencyProperty.Register(
+        nameof(DialogBottom), typeof(object), typeof(InputDialogBase), new PropertyMetadata(null, UpdateLogicalChild));
 
     #endregion
 
@@ -67,7 +64,7 @@ public abstract class InputDialogBase : Window
     {
         if (DialogBottom is FrameworkElement elementBottom)
         {
-            elementBottom.DataContext = DataContext;
+            elementBottom.SetCurrentValue(DataContextProperty, DataContext);
         }
     }
 
@@ -86,7 +83,7 @@ public abstract class InputDialogBase : Window
         if (e.NewValue is FrameworkElement newChild)
         {
             window.AddLogicalChild(newChild);
-            newChild.DataContext = window.DataContext;
+            newChild.SetCurrentValue(DataContextProperty, window.DataContext);
         }
     }
 

@@ -93,7 +93,7 @@ partial class WindowViewModel
     {
         try
         {
-            await OnContentRenderedAsync(CancellationToken).ConfigureAwait(false);
+            await OnContentRenderedAsync(CancellationToken);
         }
         catch (OperationCanceledException ex)
         {

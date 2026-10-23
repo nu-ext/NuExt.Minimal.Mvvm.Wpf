@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Windows;
 
 namespace Minimal.Mvvm.Wpf;
 
@@ -21,18 +22,18 @@ public abstract class MessageBoxButtonLocalizerBase
 /// </summary>
 public class MessageBoxButtonLocalizer : MessageBoxButtonLocalizerBase
 {
-    private static readonly MessageBoxButtonLocalizerBase s_default = new MessageBoxButtonLocalizer();
     private static MessageBoxButtonLocalizerBase? s_custom;
 
     /// <summary>
-    /// Gets or sets the default instance of <see cref="MessageBoxButtonLocalizerBase"/>.
-    /// If a custom instance is set, it will override the default instance.
+    /// Gets or sets the message box button localizer.
+    /// Assigning <see langword="null"/> restores the default localizer.
     /// </summary>
+    [AllowNull]
     public static MessageBoxButtonLocalizerBase Default
     {
-        get => s_custom ?? s_default;
+        get => s_custom ?? field;
         set => s_custom = value;
-    }
+    } = new MessageBoxButtonLocalizer();
 
     /// <summary>
     /// Localizes the specified message box button by returning its string representation.

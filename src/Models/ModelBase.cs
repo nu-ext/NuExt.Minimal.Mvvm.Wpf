@@ -58,7 +58,7 @@ public abstract class ModelBase : BindableBase
             {
                 continue;
             }
-            Debug.Assert(prop.GetGetMethod()!.IsVirtual);
+            Debug.Assert(prop.GetGetMethod()?.IsVirtual == true, $"Property '{prop.Name}' is not virtual");
         }
         return dict;
     }
@@ -77,7 +77,7 @@ public abstract class ModelBase : BindableBase
     }
 
     /// <summary>
-    /// Initializes the object. This method can only be called once.
+    /// Initializes the object if it is not already initialized.
     /// </summary>
     /// <remarks>
     /// If the object is already initialized, this method does nothing.
@@ -95,7 +95,7 @@ public abstract class ModelBase : BindableBase
     }
 
     /// <summary>
-    /// Optionally uninitializes the object, performing necessary cleanup. This method can only be called once.
+    /// Uninitializes the object if it is currently initialized, performing the necessary cleanup.
     /// </summary>
     /// <remarks>
     /// If the object is already uninitialized, this method does nothing. 

@@ -28,6 +28,10 @@ public static class CommandExtensions
     /// Raises the <see cref="ICommand.CanExecuteChanged"/> event.
     /// </summary>
     /// <param name="command">The command to raise the CanExecuteChanged event for.</param>
+    /// <remarks>
+    /// For commands that do not implement <see cref="IRelayCommand"/>, the method attempts to invoke a discoverable backing event handler.
+    /// If no compatible handler is found, the method has no effect.
+    /// </remarks>
     /// <exception cref="ArgumentNullException">Thrown when the command is null.</exception>
     public static void RaiseCanExecuteChanged(this ICommand command)
     {

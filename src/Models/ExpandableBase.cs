@@ -1,4 +1,4 @@
-﻿using System.Windows;
+﻿using System.ComponentModel;
 
 namespace Minimal.Mvvm.Wpf;
 

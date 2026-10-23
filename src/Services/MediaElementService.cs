@@ -130,6 +130,7 @@ public sealed partial class MediaElementService : ServiceBase<MediaElement>, IMe
     {
         base.OnAttached();
         Debug.Assert(_subscription == null);
+
         if (AssociatedObject!.IsLoaded)
         {
             Disposable.DisposeAndNull(ref _subscription);
@@ -144,8 +145,8 @@ public sealed partial class MediaElementService : ServiceBase<MediaElement>, IMe
     protected override void OnDetaching()
     {
         AssociatedObject!.Loaded -= OnMediaElementLoaded;
-        Debug.Assert(_subscription != null);
         Disposable.DisposeAndNull(ref _subscription);
+
         base.OnDetaching();
     }
 

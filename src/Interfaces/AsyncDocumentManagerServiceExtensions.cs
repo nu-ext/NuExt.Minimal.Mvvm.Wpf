@@ -20,7 +20,8 @@ public static class AsyncDocumentManagerServiceExtensions
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="service"/> is null.</exception>
     public static IAsyncDocument? FindDocumentById(this IAsyncDocumentManagerService service, object id)
     {
-        Throw.IfNull(service);
+        ArgumentNullException.ThrowIfNull(service);
+
         return service.Documents.FirstOrDefault(x => Equals(x.Id, id));
     }
 
@@ -37,12 +38,13 @@ public static class AsyncDocumentManagerServiceExtensions
         object id,
         Func<IAsyncDocumentManagerService, ValueTask<IAsyncDocument>> createDocumentCallback)
     {
-        Throw.IfNull(service);
-        Throw.IfNull(createDocumentCallback);
+        ArgumentNullException.ThrowIfNull(service);
+        ArgumentNullException.ThrowIfNull(createDocumentCallback);
+
         IAsyncDocument? document = service.FindDocumentById(id);
         if (document == null)
         {
-            document = await createDocumentCallback(service).ConfigureAwait(false);
+            document = await createDocumentCallback(service);
             document.Id = id;
         }
         return document;
@@ -74,8 +76,8 @@ public static class AsyncDocumentManagerServiceExtensions
         CancellationToken cancellationToken = default)
         where TViewModel : class, IAsyncDisposable
     {
-        Throw.IfNull(service);
-        Throw.IfNull(viewModelFactory);
+        ArgumentNullException.ThrowIfNull(service);
+        ArgumentNullException.ThrowIfNull(viewModelFactory);
 
         return service.FindDocumentByIdOrCreateAsync(id, CreateDocumentAsync);
 
@@ -94,10 +96,18 @@ public static class AsyncDocumentManagerServiceExtensions
                 document.DisposeOnClose = true;
                 return document;
             }
-            catch (Exception ex)
+            catch
             {
-                Debug.Assert(ex is OperationCanceledException, ex.Message);
-                await viewModel.DisposeAsync();
+                try
+                {
+                    await viewModel.DisposeAsync();
+                }
+                catch
+                {
+                    var msg = $"Failed to dispose the ViewModel {viewModel.GetType().FullName} after document {documentType} with id {id} creation failed.";
+                    Trace.WriteLine(msg);
+                    Debug.Fail(msg);
+                }
                 throw;
             }
         }

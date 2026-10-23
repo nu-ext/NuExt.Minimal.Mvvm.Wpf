@@ -114,9 +114,12 @@ public class ComboBoxMultiSelectionBehavior : Behavior<ComboBox>
     {
         base.OnAttached();
         Debug.Assert(_subscription == null);
+
         Disposable.DisposeAndNull(ref _subscription);
         _subscription = SubscribeComboBox(AssociatedObject!);
+
         SetSelectedItems(AssociatedObject!, SelectedItems);
+        SetSelectedItemsAsString(AssociatedObject!, SelectedItems);
     }
 
     /// <summary>
@@ -127,6 +130,7 @@ public class ComboBoxMultiSelectionBehavior : Behavior<ComboBox>
     {
         Debug.Assert(_subscription != null);
         Disposable.DisposeAndNull(ref _subscription);
+
         base.OnDetaching();
     }
 

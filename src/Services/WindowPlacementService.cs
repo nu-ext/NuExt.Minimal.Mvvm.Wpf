@@ -135,8 +135,10 @@ public class WindowPlacementService : WindowServiceBase, IWindowPlacementService
         }
         catch (Exception ex)
         {
-            Debug.Assert(ex is OperationCanceledException, ex.Message);
             Error?.Invoke(this, new ErrorEventArgs(ex));
+            var msg = $"Error restoring window placement: {ex.Message}";
+            Trace.WriteLine(msg);
+            Debug.Fail(msg);
         }
     }
 
@@ -202,8 +204,10 @@ public class WindowPlacementService : WindowServiceBase, IWindowPlacementService
         }
         catch (Exception ex)
         {
-            Debug.Assert(ex is OperationCanceledException, ex.Message);
             Error?.Invoke(this, new ErrorEventArgs(ex));
+            var msg = $"Error saving window placement: {ex.Message}";
+            Trace.WriteLine(msg);
+            Debug.Fail(msg);
         }
     }
 

@@ -1,9 +1,8 @@
-﻿using Minimal.Behaviors.Wpf;
-using Presentation.Wpf.Controls;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
+using Minimal.Behaviors.Wpf;
+using Presentation.Wpf.Controls;
 
 namespace Minimal.Mvvm.Wpf;
 
@@ -86,8 +85,14 @@ public class TreeViewSelectedItemBehavior : Behavior<TreeView>
     protected override void OnAttached()
     {
         base.OnAttached();
+
         AssociatedObject!.Loaded += OnTreeViewLoaded;
         AssociatedObject!.SelectedItemChanged += OnTreeViewSelectedItemChanged;
+
+        if (AssociatedObject.IsLoaded && AssociatedObject.SelectedItem != SelectedItem)
+        {
+            SelectItem(AssociatedObject, SelectedItem);
+        }
     }
 
     /// <inheritdoc />
@@ -98,6 +103,7 @@ public class TreeViewSelectedItemBehavior : Behavior<TreeView>
             AssociatedObject.Loaded -= OnTreeViewLoaded;
             AssociatedObject.SelectedItemChanged -= OnTreeViewSelectedItemChanged;
         }
+
         base.OnDetaching();
     }
 
@@ -105,16 +111,18 @@ public class TreeViewSelectedItemBehavior : Behavior<TreeView>
     {
         if (newItem == null)
         {
-            foreach (var item in tree.Items.OfType<TreeViewItem>())
+            if (tree.SelectedItem is { } selectedItem)
             {
-                item.SetValue(TreeViewItem.IsSelectedProperty, false);
+                var selectedContainer = selectedItem as TreeViewItem ?? tree.GetTreeViewItem(selectedItem);
+
+                selectedContainer?.SetCurrentValue(TreeViewItem.IsSelectedProperty, false);
             }
             return;
         }
 
         if (newItem is TreeViewItem treeViewItem)
         {
-            treeViewItem.SetValue(TreeViewItem.IsSelectedProperty, true);
+            treeViewItem.SetCurrentValue(TreeViewItem.IsSelectedProperty, true);
             //treeViewItem.Focus();
             return;
         }
@@ -122,7 +130,7 @@ public class TreeViewSelectedItemBehavior : Behavior<TreeView>
         var dataBoundTreeViewItem = tree.GetTreeViewItem(newItem);
         Debug.Assert(dataBoundTreeViewItem != null);
         if (dataBoundTreeViewItem == null) return;
-        dataBoundTreeViewItem.SetValue(TreeViewItem.IsSelectedProperty, true);
+        dataBoundTreeViewItem.SetCurrentValue(TreeViewItem.IsSelectedProperty, true);
     }
 
     #endregion

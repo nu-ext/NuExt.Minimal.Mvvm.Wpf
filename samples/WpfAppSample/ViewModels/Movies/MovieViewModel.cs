@@ -4,7 +4,7 @@ using MovieWpfApp.Models;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
-using static AccessModifier;
+using static Minimal.Mvvm.AccessModifier;
 
 namespace MovieWpfApp.ViewModels;
 
