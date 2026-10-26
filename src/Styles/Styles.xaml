@@ -2,9 +2,10 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="pack://application:,,,/NuExt.Minimal.Mvvm.Wpf;component/Styles/InputDialogBase.xaml" />
-        <ResourceDictionary Source="pack://application:,,,/NuExt.Minimal.Mvvm.Wpf;component/Styles/InputDialog.xaml" />
-        <ResourceDictionary Source="pack://application:,,,/NuExt.Minimal.Mvvm.Wpf;component/Styles/MenuItem.xaml" />
+        <ResourceDictionary Source="InputDialogBase.xaml" />
+        <ResourceDictionary Source="InputDialog.xaml" />
+        <ResourceDictionary Source="MenuItem.xaml" />
+        <ResourceDictionary Source="ToolBarItem.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
 </ResourceDictionary>

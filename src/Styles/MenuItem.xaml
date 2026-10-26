@@ -5,24 +5,32 @@
                     xmlns:nx="clr-namespace:Minimal.Mvvm.Wpf"
                     mc:Ignorable="d">
 
-    <!--Menu items styles-->
-    <ControlTemplate x:Key="Templates.Separator">
-        <Separator Style="{StaticResource {x:Static MenuItem.SeparatorStyleKey}}"/>
-    </ControlTemplate>
+  <ControlTemplate x:Key="Templates.MenuItem.Separator" TargetType="{x:Type MenuItem}">
+    <Separator Style="{DynamicResource {x:Static MenuItem.SeparatorStyleKey}}" />
+  </ControlTemplate>
 
-    <Style x:Key="Styles.MenuItem.Default" BasedOn="{StaticResource {x:Type MenuItem}}" TargetType="{x:Type MenuItem}">
-        <d:Style.DataContext>
-            <x:Type Type="nx:MenuItemViewModel" />
-        </d:Style.DataContext>
-        <Setter Property="CommandParameter" Value="{Binding CommandParameter}" />
-        <Setter Property="Command" Value="{Binding Command}" />
-        <Setter Property="Header" Value="{Binding Header}" />
-        <Setter Property="ItemsSource" Value="{Binding SubMenuItems}" />
-        <Style.Triggers>
-            <DataTrigger Binding="{Binding}" Value="{x:Null}">
-                <Setter Property="Template" Value="{StaticResource Templates.Separator}" />
-            </DataTrigger>
-        </Style.Triggers>
-    </Style>
+  <!-- Menu item style -->
+  <Style x:Key="Styles.MenuItem.Default" BasedOn="{StaticResource {x:Type MenuItem}}" TargetType="{x:Type MenuItem}">
+    <d:Style.DataContext>
+      <x:Type Type="nx:MenuItemViewModel" />
+    </d:Style.DataContext>
+    <Setter Property="CommandParameter" Value="{Binding CommandParameter}" />
+    <Setter Property="Command" Value="{Binding Command}" />
+    <Setter Property="Header" Value="{Binding Header}" />
+    <Setter Property="Icon" Value="{Binding Icon}" />
+    <Setter Property="InputGestureText" Value="{Binding InputGestureText}" />
+    <Setter Property="IsCheckable" Value="{Binding IsCheckable}" />
+    <Setter Property="IsChecked" Value="{Binding IsChecked, Mode=TwoWay}" />
+    <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
+    <Setter Property="StaysOpenOnClick" Value="{Binding StaysOpenOnClick}" />
+    <Setter Property="ItemsSource" Value="{Binding SubMenuItems}" />
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding}" Value="{x:Null}">
+        <Setter Property="Template" Value="{StaticResource Templates.MenuItem.Separator}" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="IsHitTestVisible" Value="False" />
+      </DataTrigger>
+    </Style.Triggers>
+  </Style>
 
 </ResourceDictionary>
