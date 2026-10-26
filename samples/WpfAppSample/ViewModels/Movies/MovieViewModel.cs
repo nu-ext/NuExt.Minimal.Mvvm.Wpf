@@ -8,6 +8,7 @@ using static Minimal.Mvvm.AccessModifier;
 
 namespace MovieWpfApp.ViewModels;
 
+[GenerateCommands]
 internal sealed partial class MovieViewModel : DocumentContentViewModelBase
 {
     #region Properties

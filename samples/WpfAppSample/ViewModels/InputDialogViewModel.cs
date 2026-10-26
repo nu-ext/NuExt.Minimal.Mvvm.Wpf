@@ -3,7 +3,7 @@ using Minimal.Mvvm.Wpf;
 
 namespace MovieWpfApp.ViewModels;
 
-internal partial class InputDialogViewModel : ControlViewModel
+internal partial class InputDialogViewModel : ControlViewModelBase
 {
     #region Properties
 

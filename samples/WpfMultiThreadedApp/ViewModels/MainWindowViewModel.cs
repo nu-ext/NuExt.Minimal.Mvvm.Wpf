@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Data;
-using System.Windows.Input;
 using Minimal.Mvvm;
 using Minimal.Mvvm.Wpf;
 using Serilog;
@@ -15,7 +14,8 @@ using WpfMultiThreadedApp.Views;
 
 namespace WpfMultiThreadedApp.ViewModels;
 
-internal sealed partial class MainWindowViewModel : WindowViewModel
+[GenerateCommands]
+internal sealed partial class MainWindowViewModel : WindowViewModelBase
 {
     public static readonly (string Name, string TimeZoneId)[] Cities =
     [
@@ -73,7 +73,7 @@ internal sealed partial class MainWindowViewModel : WindowViewModel
         return key != default && IsUsable;
     }
 
-    [Notify(Setter = AccessModifier.Private)]
+    [Command(Setter = AccessModifier.Private)]
     private void ShowCity(CityTimeZone key)
     {
         VerifyAccess();
@@ -103,7 +103,7 @@ internal sealed partial class MainWindowViewModel : WindowViewModel
         return key != default && IsUsable;
     }
 
-    [Notify(Setter = AccessModifier.Private)]
+    [Command(Setter = AccessModifier.Private)]
     private async Task CloseCityAsync(CityTimeZone key)
     {
         VerifyAccess();
@@ -136,40 +136,6 @@ internal sealed partial class MainWindowViewModel : WindowViewModel
                 await viewModel.CloseAsync();
             }
         }
-    }
-
-    protected override void CreateCommands()
-    {
-        base.CreateCommands();
-
-        ShowCityCommand = new RelayCommand<CityTimeZone>(ShowCity, CanShowCity);
-        CloseCityCommand = new AsyncCommand<CityTimeZone>(CloseCityAsync, CanCloseCity);
-    }
-
-    protected override ICommand? GetCurrentCommand([CallerMemberName] string? callerName = null)
-    {
-        return callerName switch
-        {
-            nameof(ShowCity) => ShowCityCommand,
-            nameof(CloseCityAsync) => CloseCityCommand,
-            _ => base.GetCurrentCommand(callerName)
-        };
-    }
-
-    protected override void GetAllCommands(ref ValueListBuilder<(string PropertyName, ICommand? Command)> builder)
-    {
-        base.GetAllCommands(ref builder);
-
-        builder.Append((nameof(ShowCityCommand), ShowCityCommand));
-        builder.Append((nameof(CloseCityCommand), CloseCityCommand));
-    }
-
-    protected override void NullifyCommands()
-    {
-        ShowCityCommand = null;
-        CloseCityCommand = null;
-
-        base.NullifyCommands();
     }
 
     #endregion

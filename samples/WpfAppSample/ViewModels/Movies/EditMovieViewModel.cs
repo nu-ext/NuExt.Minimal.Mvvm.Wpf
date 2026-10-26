@@ -6,7 +6,7 @@ using System.Diagnostics;
 
 namespace MovieWpfApp.ViewModels;
 
-internal sealed class EditMovieViewModel : ControlViewModel, IDataErrorInfo
+internal sealed class EditMovieViewModel : ControlViewModelBase, IDataErrorInfo
 {
     #region Properties
 

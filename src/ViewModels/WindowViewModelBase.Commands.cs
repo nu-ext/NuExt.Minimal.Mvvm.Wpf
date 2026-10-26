@@ -9,7 +9,7 @@ using System.Windows.Input;
 
 namespace Minimal.Mvvm.Wpf;
 
-partial class WindowViewModel
+partial class WindowViewModelBase
 {
     #region Commands
 
@@ -46,7 +46,7 @@ partial class WindowViewModel
     /// <code>
     /// &lt;nx:EventToCommand EventName="Closing" Command="{Binding ClosingCommand}" PassEventArgsToCommand="True" /&gt;
     /// </code>
-    /// The command allows you to manage cancellation in the <see cref="CanCloseAsync"/> method and perform cleanup operations in the <see cref="ControlViewModel.DisposeAsyncCore"/> method when the window is closing.
+    /// The command allows you to manage cancellation in the <see cref="CanCloseAsync"/> method and perform cleanup operations during asynchronous ViewModel disposal when the window is closing.
     /// Note that <c>PassEventArgsToCommand</c> must be specified and set to <see langword="true"/> to pass the <see cref="System.ComponentModel.CancelEventArgs"/> to the command.
     /// </remarks>
     [Notify]

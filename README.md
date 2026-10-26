@@ -41,7 +41,7 @@ Cleanup releases the owned ViewModel, bindings, subscriptions, and UI host
 ## Highlights
 
 - **Control/window-oriented ViewModels**  
-  `ControlViewModel` and `WindowViewModel` provide async lifecycle, parent–child composition, dispatcher access, service cleanup, and window close coordination.
+  `ControlViewModelBase` and `WindowViewModelBase` provide async lifecycle, parent–child composition, dispatcher access, service cleanup, and window close coordination.
 
 - **Attached UI services and behaviors**  
   Dialogs, window services, document managers, media services, and behaviors are configured next to the View in XAML and become available through its ViewModel scope.
@@ -73,11 +73,55 @@ Cleanup releases the owned ViewModel, bindings, subscriptions, and UI host
 
 ## Key concepts
 
-- **Control/Window‑oriented ViewModels + DispatcherService** — ViewModels expose a *predictable* async lifecycle and run code on the owning UI thread via `IDispatcherService`. This is why the same patterns also work in **multi‑threaded WPF**, where each window has its own dispatcher.
+- **Control/window ViewModel bases + DispatcherService** — ViewModels expose a *predictable* async lifecycle and run code on the owning UI thread via `IDispatcherService`. This is why the same patterns also work in **multi‑threaded WPF**, where each window has its own dispatcher.
 
 - **IAsyncDocument + IAsyncDocumentManagerService** — a document is a *hosted view + ViewModel* with a stable contract (`Id`, `Title`, `Show/Hide/CloseAsync`, optional “dispose ViewModel on close”). The **manager** creates documents (`CreateDocumentAsync`), tracks `ActiveDocument`, enumerates `Documents`, supports bulk `CloseAllAsync`, and plugs into WPF as **windows** (`WindowedDocumentService`) or **tabs** (`TabbedDocumentService`).
 
 - **IAsyncDialogService** — shows modal dialogs with a view resolved by name/template and a ViewModel you provide; returns either a `MessageBoxResult` or a selected `UICommand`. The service handles view creation, optional title binding, validation (via `IDataErrorInfo` / `INotifyDataErrorInfo`), and clean teardown.
+
+### ViewModel base hierarchy and command generation
+
+The WPF package separates general ViewModel behavior from control- and window-specific behavior:
+
+```text
+ViewModelBase
+    ↓
+CommandViewModelBase implements ICommandViewModel
+    ↓
+ControlViewModelBase implements IControlViewModel
+    ↓
+WindowViewModelBase implements IWindowViewModel
+```
+
+- `ViewModelBase` provides asynchronous initialization, parent/parameter support, and hierarchical service resolution.
+- `CommandViewModelBase` adds command creation, lookup, enumeration, cancellation, completion tracking, requery, and cleanup without runtime reflection.
+- `ControlViewModelBase` adds control lifecycle, dispatcher synchronization, asynchronous disposal, and the `LoadedCommand` and `UnloadedCommand` integration points.
+- `WindowViewModelBase` adds window state, close validation, cancellation, placement notifications, and window-specific commands.
+
+Use the lowest base class that provides the capabilities required by the ViewModel. A ViewModel that needs generated commands but is not associated with a control can derive directly from `CommandViewModelBase`.
+
+The companion [`NuExt.Minimal.Mvvm.SourceGenerator`](https://www.nuget.org/packages/NuExt.Minimal.Mvvm.SourceGenerator) can generate the complete command infrastructure for a partial ViewModel. Apply `[GenerateCommands]` to the class and `[Command]` to each command method:
+
+```csharp
+using Minimal.Mvvm;
+using Minimal.Mvvm.Wpf;
+
+[GenerateCommands]
+public partial class EditorViewModel : CommandViewModelBase
+{
+    private bool CanSave() => HasChanges;
+
+    [Command(Setter = AccessModifier.Private)]
+    private Task SaveAsync(CancellationToken cancellationToken)
+    {
+        return SaveCoreAsync(cancellationToken);
+    }
+}
+```
+
+For each `[Command]` method, the generator creates the command property and command instance, resolves a compatible `CanExecute` method, and generates the overrides used to create, find, enumerate, and nullify commands. Explicit callback names can be supplied with `CanExecute = nameof(...)`. Generated overrides participate in the base-class chain, so commands declared by base ViewModels remain included.
+
+Command instances are created synchronously from `InitializeAsyncCore`, preserving the caller's synchronization context, and are nullified during uninitialization. `ICommandViewModel` exposes operations to cancel executing asynchronous commands, wait for their completion, and raise `CanExecuteChanged` for the complete command set.
 
 ### ViewModel lifecycle
 
@@ -85,10 +129,10 @@ Use each lifecycle stage for a distinct kind of work. `LoadedCommand`, `ContentR
 
 ```text
 Construction
-    Establish local state and command infrastructure
+    Establish local state
         ↓
 InitializeAsyncCore
-    Resolve UI services, apply parameters, and register owned resources
+    Create commands, resolve UI services, apply parameters, and register owned resources
         ↓
 LoadedCommand
     React to the View entering the visual tree
@@ -170,7 +214,7 @@ private ValueTask ShowDetailsAsync(DetailsModel details, CancellationToken cance
 }
 ```
 
-A `WindowViewModel` coordinates closing and disposal when the created Window includes a `WindowService` bound to `ClosingCommand`. `ViewWindowService` manages the View and Window infrastructure but does not take ownership of an arbitrary disposable ViewModel.
+A `WindowViewModelBase` coordinates closing and disposal when the created Window includes a `WindowService` bound to `ClosingCommand`. `ViewWindowService` manages the View and Window infrastructure but does not take ownership of an arbitrary disposable ViewModel.
 
 ## Quick Start (practical, minimal)
 

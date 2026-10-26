@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace Minimal.Mvvm.Wpf;
 
-partial class ControlViewModel
+partial class ControlViewModelBase
 {
     [Conditional("DEBUG")]
     private void ValidateDisposingState()

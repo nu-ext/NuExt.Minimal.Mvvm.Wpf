@@ -7,15 +7,31 @@ using System.Threading.Tasks;
 namespace Minimal.Mvvm.Wpf;
 
 /// <summary>
-/// Represents a ViewModel for a window, providing properties and methods for managing the window's state,
-/// services for handling various window-related operations, and commands for interacting with the UI.
+/// Base class for window ViewModels, providing window lifecycle management,
+/// state, services, and commands for interacting with the window.
 /// </summary>
-public partial class WindowViewModel(IServiceContainer? fallbackServices) : ControlViewModel(fallbackServices), IWindowViewModel
+public partial class WindowViewModelBase : ControlViewModelBase, IWindowViewModel
 {
     private readonly CancellationTokenSource _cts = new();
     private bool _isClosing;
 
-    public WindowViewModel() : this(fallbackServices: null)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="WindowViewModelBase"/> class.
+    /// </summary>
+    protected WindowViewModelBase() : this(fallbackServices: null)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="WindowViewModelBase"/> class
+    /// with an optional fallback service container.
+    /// </summary>
+    /// <param name="fallbackServices">
+    /// The fallback service container used when local service resolution fails;
+    /// or <see langword="null"/> if no fallback container is available.
+    /// </param>
+    protected WindowViewModelBase(IServiceContainer? fallbackServices)
+        : base(fallbackServices)
     {
     }
 
@@ -28,7 +44,7 @@ public partial class WindowViewModel(IServiceContainer? fallbackServices) : Cont
     /// Gets or sets the title of the window.
     /// </summary>
     [Notify]
-    private string _title = string.Empty;
+    public partial string Title { get; set; }
 
     #endregion
 

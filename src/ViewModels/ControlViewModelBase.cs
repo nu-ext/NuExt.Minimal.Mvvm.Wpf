@@ -9,9 +9,10 @@ using System.Windows;
 namespace Minimal.Mvvm.Wpf;
 
 /// <summary>
-/// Represents a base class for control-specific ViewModels, extending the functionality of the <see cref="ViewModelBase"/> class.
+/// Base class for ViewModels associated with UI controls, providing control lifecycle,
+/// thread synchronization, asynchronous disposal, and command management support.
 /// </summary>
-public partial class ControlViewModel : ViewModelBase, IControlViewModel
+public partial class ControlViewModelBase : CommandViewModelBase, IControlViewModel
 {
 #if NET9_0_OR_GREATER
     private enum States
@@ -33,11 +34,22 @@ public partial class ControlViewModel : ViewModelBase, IControlViewModel
     private volatile int _state;
 #endif
 
-    public ControlViewModel() : this(fallbackServices: null)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ControlViewModelBase"/> class.
+    /// </summary>
+    protected ControlViewModelBase() : this(fallbackServices: null)
     {
     }
 
-    public ControlViewModel(IServiceContainer? fallbackServices) : base(fallbackServices)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ControlViewModelBase"/> class
+    /// with an optional fallback service container.
+    /// </summary>
+    /// <param name="fallbackServices">
+    /// The fallback service container used when local and parent service resolution fails;
+    /// or <see langword="null"/> if no fallback container is available.
+    /// </param>
+    protected ControlViewModelBase(IServiceContainer? fallbackServices) : base(fallbackServices)
     {
         if (ViewModelHelper.IsInDesignMode)
         {
@@ -198,6 +210,26 @@ public partial class ControlViewModel : ViewModelBase, IControlViewModel
         return !IsDisposed && base.CanSetProperty(oldValue, newValue, propertyName);
     }
 
+    /// <summary>
+    /// Asynchronously cleans up all services created in the local service container.
+    /// </summary>
+    /// <returns>
+    /// A value task that represents the asynchronous cleanup operation.
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// If the local service container has not been created, the method completes immediately.
+    /// </para>
+    /// <para>
+    /// Services implementing <see cref="IAsyncDisposable"/> are disposed asynchronously.
+    /// Other services implementing <see cref="IDisposable"/> are disposed synchronously.
+    /// Asynchronous disposal takes precedence when a service implements both interfaces.
+    /// </para>
+    /// <para>
+    /// Service cleanup continues on the captured synchronization context.
+    /// Override this method to customize service cleanup behavior.
+    /// </para>
+    /// </remarks>
     protected virtual ValueTask CleanupServicesAsync()
     {
         if (!IsServicesCreated)
@@ -315,7 +347,7 @@ public partial class ControlViewModel : ViewModelBase, IControlViewModel
     }
 
     /// <summary>
-    /// Gets the Window associated with the <see cref="ControlViewModel"/>.
+    /// Gets the Window associated with the <see cref="ControlViewModelBase"/>.
     /// </summary>
     /// <returns><see cref="Window"/> or <see langword="null"/>.</returns>
     protected virtual Window? GetWindow()
@@ -352,7 +384,7 @@ public partial class ControlViewModel : ViewModelBase, IControlViewModel
 
 internal static partial class EventArgsCache
 {
-    internal static readonly PropertyChangedEventArgs IsDisposedPropertyChanged = new(nameof(ControlViewModel.IsDisposed));
-    internal static readonly PropertyChangedEventArgs IsDisposingPropertyChanged = new(nameof(ControlViewModel.IsDisposing));
-    internal static readonly PropertyChangedEventArgs IsUsablePropertyChanged = new(nameof(ControlViewModel.IsUsable));
+    internal static readonly PropertyChangedEventArgs IsDisposedPropertyChanged = new(nameof(ControlViewModelBase.IsDisposed));
+    internal static readonly PropertyChangedEventArgs IsDisposingPropertyChanged = new(nameof(ControlViewModelBase.IsDisposing));
+    internal static readonly PropertyChangedEventArgs IsUsablePropertyChanged = new(nameof(ControlViewModelBase.IsUsable));
 }

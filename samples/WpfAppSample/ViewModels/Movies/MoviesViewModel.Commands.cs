@@ -1,10 +1,7 @@
-﻿using Minimal.Mvvm;
-using Minimal.Mvvm.Wpf;
+﻿using System.Windows;
+using Minimal.Mvvm;
 using MovieWpfApp.Models;
 using MovieWpfApp.Views;
-using System.Runtime.CompilerServices;
-using System.Windows;
-using System.Windows.Input;
 using static Minimal.Mvvm.AccessModifier;
 
 namespace MovieWpfApp.ViewModels;
@@ -15,7 +12,7 @@ partial class MoviesViewModel
 
     private bool CanDelete() => CanEdit() && ParentViewModel.CloseMovieCommand is not null;
 
-    [Notify(Setter = Private)]
+    [Command(Setter = Private)]
     private async Task DeleteAsync(CancellationToken cancellationToken)
     {
         VerifyAccess();
@@ -48,7 +45,7 @@ partial class MoviesViewModel
         return IsUsable && SelectedItem?.IsEditable == true;
     }
 
-    [Notify(Setter = Private)]
+    [Command(Setter = Private)]
     private async Task EditAsync(CancellationToken cancellationToken)
     {
         var clone = SelectedItem!.Clone();
@@ -98,7 +95,7 @@ partial class MoviesViewModel
         return IsUsable && SelectedItem is MovieGroupModel { IsLost: false };
     }
 
-    [Notify(Setter = Private)]
+    [Command(Setter = Private)]
     private async Task NewGroupAsync(CancellationToken cancellationToken)
     {
         string? groupName = null;
@@ -136,7 +133,7 @@ partial class MoviesViewModel
 
     private bool CanNewMovie() => CanNewGroup();
 
-    [Notify(Setter = Private)]
+    [Command(Setter = Private)]
     private async Task NewMovieAsync(CancellationToken cancellationToken)
     {
         await using var viewModel = new EditMovieViewModel();
@@ -170,13 +167,13 @@ partial class MoviesViewModel
         return IsUsable && item is MovieModel;
     }
 
-    [Notify(Setter = Private)]
+    [Command(Setter = Private)]
     private async Task OpenMovieAsync(MovieModelBase? item, CancellationToken cancellationToken)
     {
         await ParentViewModel.OpenMovieCommand!.ExecuteAsync((item as MovieModel)!, cancellationToken);
     }
 
-    [Notify(Setter = Private)]
+    [Command(Setter = Private, CanExecute = nameof(CanOpenMovie))]
     private async Task OpenMovieExternalAsync(MovieModelBase? item, CancellationToken cancellationToken)
     {
         await ParentViewModel.OpenMovieExternalCommand!.ExecuteAsync((item as MovieModel)!, cancellationToken);
@@ -187,7 +184,7 @@ partial class MoviesViewModel
         return IsUsable && draggedObject.CanDrag == true;
     }
 
-    [Notify(Setter = Private)]
+    [Command(Setter = Private)]
     private async Task MoveAsync(MovieModelBase draggedObject, CancellationToken cancellationToken)
     {
         var path = draggedObject.GetPath();
@@ -197,7 +194,9 @@ partial class MoviesViewModel
         SelectedItem = item;
     }
 
-    [Notify(Setter = Private)]
+    private bool CanExpandOrCollapse(bool expand) => IsUsable;
+
+    [Command(Setter = Private)]
     private void ExpandOrCollapse(bool expand)
     {
         if (expand)
@@ -213,64 +212,6 @@ partial class MoviesViewModel
     #endregion
 
     #region Methods
-
-    protected override void CreateCommands()
-    {
-        base.CreateCommands();
-
-        DeleteCommand = new AsyncCommand(DeleteAsync, CanDelete);
-        EditCommand = new AsyncCommand(EditAsync, CanEdit);
-        NewGroupCommand = new AsyncCommand(NewGroupAsync, CanNewGroup);
-        NewMovieCommand = new AsyncCommand(NewMovieAsync, CanNewMovie);
-        MoveCommand = new AsyncCommand<MovieModelBase>(MoveAsync, CanMove);
-        OpenMovieCommand = new AsyncCommand<MovieModelBase?>(OpenMovieAsync, CanOpenMovie);
-        OpenMovieExternalCommand = new AsyncCommand<MovieModelBase?>(OpenMovieExternalAsync, CanOpenMovie);
-        ExpandOrCollapseCommand = new RelayCommand<bool>(ExpandOrCollapse, _ => IsUsable);
-    }
-
-    protected override ICommand? GetCurrentCommand([CallerMemberName] string? callerName = null)
-    {
-        return callerName switch
-        {
-            nameof(DeleteAsync) => DeleteCommand,
-            nameof(EditAsync) => EditCommand,
-            nameof(NewGroupAsync) => NewGroupCommand,
-            nameof(NewMovieAsync) => NewMovieCommand,
-            nameof(MoveAsync) => MoveCommand,
-            nameof(OpenMovieAsync) => OpenMovieCommand,
-            nameof(OpenMovieExternalAsync) => OpenMovieExternalCommand,
-            nameof(ExpandOrCollapse) => ExpandOrCollapseCommand,
-            _ => base.GetCurrentCommand(callerName)
-        };
-    }
-
-    protected override void GetAllCommands(ref ValueListBuilder<(string PropertyName, ICommand? Command)> builder)
-    {
-        base.GetAllCommands(ref builder);
-
-        builder.Append((nameof(DeleteCommand), DeleteCommand));
-        builder.Append((nameof(EditCommand), EditCommand));
-        builder.Append((nameof(NewGroupCommand), NewGroupCommand));
-        builder.Append((nameof(NewMovieCommand), NewMovieCommand));
-        builder.Append((nameof(MoveCommand), MoveCommand));
-        builder.Append((nameof(OpenMovieCommand), OpenMovieCommand));
-        builder.Append((nameof(OpenMovieExternalCommand), OpenMovieExternalCommand));
-        builder.Append((nameof(ExpandOrCollapseCommand), ExpandOrCollapseCommand));
-    }
-
-    protected override void NullifyCommands()
-    {
-        DeleteCommand = null;
-        EditCommand = null;
-        NewGroupCommand = null;
-        NewMovieCommand = null;
-        MoveCommand = null;
-        OpenMovieCommand = null;
-        OpenMovieExternalCommand = null;
-        ExpandOrCollapseCommand = null;
-
-        base.NullifyCommands();
-    }
 
     protected override void OnLoaded()
     {

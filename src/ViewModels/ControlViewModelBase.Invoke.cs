@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Minimal.Mvvm.Wpf;
 
-partial class ControlViewModel
+partial class ControlViewModelBase
 {
     #region Methods
 

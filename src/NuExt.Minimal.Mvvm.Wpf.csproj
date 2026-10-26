@@ -20,11 +20,12 @@
   <ItemGroup Condition="'$(NuExt_UseLocalProjects)' != 'true'">
     <PackageReference Include="NuExt.Minimal.Mvvm" Version="0.8.0" />
     <PackageReference Include="NuExt.Minimal.Behaviors.Wpf" Version="0.8.0" />
-    <PackageReference Include="NuExt.Minimal.Mvvm.SourceGenerator" Version="0.8.0">
+    <PackageReference Include="NuExt.Minimal.Mvvm.SourceGenerator" Version="0.8.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NuExt.Presentation.Wpf" Version="0.8.0" />
+    <PackageReference Include="NuExt.Presentation.Wpf" Version="0.8.1" />
+    <PackageReference Include="NuExt.System" Version="0.8.1" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(NuExt_UseLocalProjects)' == 'true'">
@@ -32,6 +33,7 @@
     <ProjectReference Include="..\..\NuExt.Minimal.Behaviors.Wpf\src\NuExt.Minimal.Behaviors.Wpf.csproj" />
     <ProjectReference Include="..\..\NuExt.Minimal.Mvvm.SourceGenerator\src\NuExt.Minimal.Mvvm.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\NuExt.Presentation.Wpf\src\NuExt.Presentation.Wpf.csproj" />
+    <ProjectReference Include="..\..\NuExt.System\src\NuExt.System.csproj" />
   </ItemGroup>
 
 </Project>

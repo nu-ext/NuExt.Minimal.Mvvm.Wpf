@@ -252,7 +252,7 @@ public static class ViewModelHelper
     public static bool ViewModelHasTitleProperty(object viewModel)
     {
         Throw.IfNull(viewModel);
-        if (viewModel is DocumentContentViewModelBase or WindowViewModel)
+        if (viewModel is DocumentContentViewModelBase or WindowViewModelBase)
         {
             return true;
         }

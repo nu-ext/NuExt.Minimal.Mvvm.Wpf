@@ -122,7 +122,7 @@ public sealed class OpenWindowsService : AsyncDisposable, IOpenWindowsService
             removed = _viewModels.Remove(viewModel);
             if (!removed)
             {
-                string message = $"{nameof(WindowViewModel)} was not found in the registry: {viewModel}";
+                string message = $"{nameof(IWindowViewModel)} was not found in the registry: {viewModel}";
                 Trace.WriteLine(message);
                 Debug.Fail(message);
             }

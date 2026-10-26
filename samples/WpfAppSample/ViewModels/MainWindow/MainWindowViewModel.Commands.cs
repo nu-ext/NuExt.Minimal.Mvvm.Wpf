@@ -1,6 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Windows.Input;
 using Minimal.Mvvm;
 using Minimal.Mvvm.Wpf;
 using MovieWpfApp.Models;
@@ -11,24 +9,26 @@ namespace MovieWpfApp.ViewModels;
 
 partial class MainWindowViewModel
 {
-    #region Commands
-
-    [Notify(Setter = Private)]
-    private ICommand? _activeDocumentChangedCommand;
-
-    [Notify(Setter = Private)]
-    private ICommand? _activeWindowChangedCommand;
-
-    #endregion
-
     #region Command Methods
+
+    [Command(nameof(ActiveDocumentChangedCommand), Setter = Private)]
+    private void OnActiveDocumentChanged()
+    {
+        UpdateTitle();
+    }
+
+    [Command(nameof(ActiveWindowChangedCommand), Setter = Private)]
+    private void OnActiveWindowChanged()
+    {
+        UpdateTitle();
+    }
 
     private bool CanCloseActiveDocument()
     {
         return IsUsable && _lastActiveDocument != null;
     }
 
-    [Notify(Setter = Private)]
+    [Command(Setter = Private)]
     private async Task CloseActiveDocumentAsync()
     {
         if (_lastActiveDocument != null)
@@ -42,7 +42,7 @@ partial class MainWindowViewModel
         return IsUsable && _lastActiveDocument != null;
     }
 
-    [Notify(Setter = Private)]
+    [Command(Setter = Private)]
     private void ShowHideActiveDocument(bool show)
     {
         if (show)
@@ -61,7 +61,7 @@ partial class MainWindowViewModel
         return IsUsable && _lastActiveWindow != null;
     }
 
-    [Notify(Setter = Private)]
+    [Command(Setter = Private)]
     private async Task CloseActiveWindowAsync()
     {
         if (_lastActiveWindow != null)
@@ -75,7 +75,7 @@ partial class MainWindowViewModel
         return IsUsable && _lastActiveWindow != null;
     }
 
-    [Notify(Setter = Private)]
+    [Command(Setter = Private)]
     private void ShowHideActiveWindow(bool show)
     {
         if (show)
@@ -94,7 +94,7 @@ partial class MainWindowViewModel
         return IsUsable;
     }
 
-    [Notify(Setter = Private)]
+    [Command(Setter = Private)]
     private async Task ShowMoviesAsync(CancellationToken cancellationToken)
     {
         var document = await DocumentManagerService.FindDocumentByIdOrCreateAsync(
@@ -113,7 +113,7 @@ partial class MainWindowViewModel
         return IsUsable;
     }
 
-    [Notify(Setter = Private)]
+    [Command(Setter = Private)]
     private async Task OpenMovieAsync(MovieModel movie, CancellationToken cancellationToken)
     {
         var document = await DocumentManagerService.FindDocumentByIdOrCreateAsync(
@@ -127,7 +127,7 @@ partial class MainWindowViewModel
         document.Show();
     }
 
-    [Notify(Setter = Private)]
+    [Command(Setter = Private, CanExecute = nameof(CanOpenMovie))]
     private async Task OpenMovieExternalAsync(MovieModel movie, CancellationToken cancellationToken)
     {
         var document = await WindowManagerService.FindDocumentByIdOrCreateAsync(
@@ -143,7 +143,7 @@ partial class MainWindowViewModel
 
     private bool CanCloseMovie(MovieModel movie) => CanOpenMovie(movie);
 
-    [Notify(Setter = Private)]
+    [Command(Setter = Private)]
     private async Task CloseMovieAsync(MovieModel movie)
     {
         var doc = DocumentManagerService.FindDocumentById(new MovieDocument(movie));
@@ -154,71 +154,6 @@ partial class MainWindowViewModel
     #endregion
 
     #region Methods
-
-    protected override void CreateCommands()
-    {
-        base.CreateCommands();
-
-        ActiveDocumentChangedCommand = new RelayCommand(UpdateTitle);
-        ActiveWindowChangedCommand = new RelayCommand(UpdateTitle);
-        ShowMoviesCommand = new AsyncCommand(ShowMoviesAsync, CanShowMovies);
-        ShowHideActiveDocumentCommand = new RelayCommand<bool>(ShowHideActiveDocument, CanShowHideActiveDocument);
-        ShowHideActiveWindowCommand = new RelayCommand<bool>(ShowHideActiveWindow, CanShowHideActiveWindow);
-        CloseActiveDocumentCommand = new AsyncCommand(CloseActiveDocumentAsync, CanCloseActiveDocument);
-        CloseActiveWindowCommand = new AsyncCommand(CloseActiveWindowAsync, CanCloseActiveWindow);
-        OpenMovieCommand = new AsyncCommand<MovieModel>(OpenMovieAsync, CanOpenMovie);
-        OpenMovieExternalCommand = new AsyncCommand<MovieModel>(OpenMovieExternalAsync, CanOpenMovie);
-        CloseMovieCommand = new AsyncCommand<MovieModel>(CloseMovieAsync, CanCloseMovie);
-    }
-
-    protected override ICommand? GetCurrentCommand([CallerMemberName] string? callerName = null)
-    {
-        return callerName switch
-        {
-            nameof(UpdateTitle) => throw new ArgumentException($"Multiple commands found for method '{callerName}'.", nameof(callerName)),
-            nameof(ShowMoviesAsync) => ShowMoviesCommand,
-            nameof(ShowHideActiveDocument) => ShowHideActiveDocumentCommand,
-            nameof(ShowHideActiveWindow) => ShowHideActiveWindowCommand,
-            nameof(CloseActiveDocumentAsync) => CloseActiveDocumentCommand,
-            nameof(CloseActiveWindowAsync) => CloseActiveWindowCommand,
-            nameof(OpenMovieAsync) => OpenMovieCommand,
-            nameof(OpenMovieExternalAsync) => OpenMovieExternalCommand,
-            nameof(CloseMovieAsync) => CloseMovieCommand,
-            _ => base.GetCurrentCommand(callerName)
-        };
-    }
-
-    protected override void GetAllCommands(ref ValueListBuilder<(string PropertyName, ICommand? Command)> builder)
-    {
-        base.GetAllCommands(ref builder);
-
-        builder.Append((nameof(ActiveDocumentChangedCommand), ActiveDocumentChangedCommand));
-        builder.Append((nameof(ActiveWindowChangedCommand), ActiveWindowChangedCommand));
-        builder.Append((nameof(ShowMoviesCommand), ShowMoviesCommand));
-        builder.Append((nameof(ShowHideActiveDocumentCommand), ShowHideActiveDocumentCommand));
-        builder.Append((nameof(ShowHideActiveWindowCommand), ShowHideActiveWindowCommand));
-        builder.Append((nameof(CloseActiveDocumentCommand), CloseActiveDocumentCommand));
-        builder.Append((nameof(CloseActiveWindowCommand), CloseActiveWindowCommand));
-        builder.Append((nameof(OpenMovieCommand), OpenMovieCommand));
-        builder.Append((nameof(OpenMovieExternalCommand), OpenMovieExternalCommand));
-        builder.Append((nameof(CloseMovieCommand), CloseMovieCommand));
-    }
-
-    protected override void NullifyCommands()
-    {
-        ActiveDocumentChangedCommand = null;
-        ActiveWindowChangedCommand = null;
-        ShowMoviesCommand = null;
-        ShowHideActiveDocumentCommand = null;
-        ShowHideActiveWindowCommand = null;
-        CloseActiveDocumentCommand = null;
-        CloseActiveWindowCommand = null;
-        OpenMovieCommand = null;
-        OpenMovieExternalCommand = null;
-        CloseMovieCommand = null;
-
-        base.NullifyCommands();
-    }
 
     protected override async ValueTask OnContentRenderedAsync(CancellationToken cancellationToken)
     {

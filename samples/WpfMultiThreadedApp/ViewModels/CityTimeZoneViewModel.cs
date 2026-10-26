@@ -12,7 +12,7 @@ using WpfMultiThreadedApp.Services;
 
 namespace WpfMultiThreadedApp.ViewModels;
 
-public partial class CityTimeZoneViewModel : WindowViewModel
+public partial class CityTimeZoneViewModel : WindowViewModelBase
 {
     private readonly DispatcherTimer _timer;
 

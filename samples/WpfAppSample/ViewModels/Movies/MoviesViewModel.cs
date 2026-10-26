@@ -11,6 +11,7 @@ using static Minimal.Mvvm.AccessModifier;
 
 namespace MovieWpfApp.ViewModels;
 
+[GenerateCommands]
 internal sealed partial class MoviesViewModel : DocumentContentViewModelBase
 {
     #region Properties

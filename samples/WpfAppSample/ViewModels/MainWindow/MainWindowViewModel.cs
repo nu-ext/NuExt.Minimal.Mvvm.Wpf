@@ -11,7 +11,8 @@ using System.Windows;
 
 namespace MovieWpfApp.ViewModels;
 
-internal sealed partial class MainWindowViewModel : WindowViewModel
+[GenerateCommands]
+internal sealed partial class MainWindowViewModel : WindowViewModelBase
 {
     private IAsyncDocument? _lastActiveDocument;
     private IAsyncDocument? _lastActiveWindow;
