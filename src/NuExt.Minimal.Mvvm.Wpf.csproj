@@ -9,7 +9,7 @@
     <RootNamespace>Minimal.Mvvm.Wpf</RootNamespace>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591;NETSDK1233</NoWarn>
-    <VersionPrefix>0.8.1</VersionPrefix>
+    <VersionPrefix>0.8.2</VersionPrefix>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,7 +20,7 @@
   <ItemGroup Condition="'$(NuExt_UseLocalProjects)' != 'true'">
     <PackageReference Include="NuExt.Minimal.Mvvm" Version="0.8.0" />
     <PackageReference Include="NuExt.Minimal.Behaviors.Wpf" Version="0.8.0" />
-    <PackageReference Include="NuExt.Minimal.Mvvm.SourceGenerator" Version="0.8.1">
+    <PackageReference Include="NuExt.Minimal.Mvvm.SourceGenerator" Version="0.8.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

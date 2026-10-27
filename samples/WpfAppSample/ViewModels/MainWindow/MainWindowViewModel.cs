@@ -19,11 +19,11 @@ internal sealed partial class MainWindowViewModel : WindowViewModelBase
 
     #region Properties
 
-    [Notify(CallbackName = nameof(OnActiveDocumentChanged), PreferCallbackWithParameter = true)]
-    private IAsyncDocument? _activeDocument;
+    [Notify(CallbackName = nameof(OnActiveDocumentChanged))]
+    public partial IAsyncDocument? ActiveDocument { get; set; }
 
-    [Notify(CallbackName = nameof(OnActiveWindowChanged), PreferCallbackWithParameter = true)]
-    private IAsyncDocument? _activeWindow;
+    [Notify(CallbackName = nameof(OnActiveWindowChanged))]
+    public partial IAsyncDocument? ActiveWindow { get; set; }
 
     public ObservableCollection<MenuItemViewModel> MenuItems { get; } = [];
 

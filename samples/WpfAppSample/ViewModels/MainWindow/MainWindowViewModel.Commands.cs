@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Windows.Input;
 using Minimal.Mvvm;
 using Minimal.Mvvm.Wpf;
 using MovieWpfApp.Models;
