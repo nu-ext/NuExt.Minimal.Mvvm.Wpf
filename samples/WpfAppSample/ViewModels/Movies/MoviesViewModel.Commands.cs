@@ -48,6 +48,8 @@ partial class MoviesViewModel
     [Command(Setter = Private)]
     private async Task EditAsync(CancellationToken cancellationToken)
     {
+        VerifyAccess();
+
         var clone = SelectedItem!.Clone();
 
         switch (clone)

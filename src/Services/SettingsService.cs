@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Windows;
+using Minimal.Mvvm.Wpf.Serialization;
 
 namespace Minimal.Mvvm.Wpf;
 
@@ -105,7 +106,7 @@ public class SettingsService : ServiceBase<FrameworkElement>, ISettingsService
                 var json = File.ReadAllText(filePath);
                 if (!string.IsNullOrEmpty(json))
                 {
-                    ObjectUtils.DeserializeObject(json, settings.GetPropertyType, settings.SetProperty, options, out var additionalData);
+                    var additionalData = JsonObjectStateSerializer.Deserialize(json, settings.GetPropertyType, settings.SetProperty, options);
                     if (additionalData != null)
                     {
                         if (settings.AdditionalData == null)
@@ -126,7 +127,8 @@ public class SettingsService : ServiceBase<FrameworkElement>, ISettingsService
         }
         catch (Exception ex)
         {
-            Debug.Assert(false, ex.Message);
+            Trace.WriteLine($"Failed to deserialize '{name}': {ex}");
+            Debug.Fail($"Failed to deserialize '{name}': {ex.Message}");
             Error?.Invoke(this, new ErrorEventArgs(ex));
         }
         return false;
@@ -148,7 +150,7 @@ public class SettingsService : ServiceBase<FrameworkElement>, ISettingsService
         try
         {
             string filePath = Path.Combine(DirectoryName, GetFileName(name));
-            string? s = ObjectUtils.SerializeObject(settings, options);
+            string? s = JsonObjectStateSerializer.Serialize(settings, options);
             if (!string.IsNullOrEmpty(s))
             {
                 File.WriteAllText(filePath, s);
@@ -157,7 +159,8 @@ public class SettingsService : ServiceBase<FrameworkElement>, ISettingsService
         }
         catch (Exception ex)
         {
-            Debug.Assert(false, ex.Message);
+            Trace.WriteLine($"Failed to serialize '{name}': {ex}");
+            Debug.Fail($"Failed to serialize '{name}': {ex.Message}");
             Error?.Invoke(this, new ErrorEventArgs(ex));
         }
         return false;

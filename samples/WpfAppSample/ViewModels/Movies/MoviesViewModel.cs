@@ -31,9 +31,9 @@ internal sealed partial class MoviesViewModel : DocumentContentViewModelBase
 
     private IAsyncDialogService DialogService => GetRequiredService<IAsyncDialogService>();
 
-    public EnvironmentService EnvironmentService => GetService<EnvironmentService>()!;
+    public EnvironmentService EnvironmentService => GetRequiredService<EnvironmentService>();
 
-    private MoviesService MoviesService => GetService<MoviesService>()!;
+    private MoviesService MoviesService => GetRequiredService<MoviesService>();
 
     private new MainWindowViewModel ParentViewModel => GetParentViewModel<MainWindowViewModel>();
 
@@ -54,7 +54,7 @@ internal sealed partial class MoviesViewModel : DocumentContentViewModelBase
 
     protected override async ValueTask DisposeAsyncCore()
     {
-        Settings!.SelectedPath = SelectedItem?.GetPath();
+        Settings?.SelectedPath = SelectedItem?.GetPath();
 
         await base.DisposeAsyncCore().ConfigureAwait(false);
     }

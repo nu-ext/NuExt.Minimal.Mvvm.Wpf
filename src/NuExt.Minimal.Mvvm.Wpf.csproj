@@ -25,7 +25,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="NuExt.Presentation.Wpf" Version="0.8.1" />
-    <PackageReference Include="NuExt.System" Version="0.8.1" />
+    <PackageReference Include="NuExt.System" Version="0.8.2" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(NuExt_UseLocalProjects)' == 'true'">
