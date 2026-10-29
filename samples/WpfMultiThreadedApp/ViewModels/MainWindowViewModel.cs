@@ -43,7 +43,6 @@ internal sealed partial class MainWindowViewModel : WindowViewModelBase
 
     private readonly object _syncLock = new();
 
-
     #region Properties
 
     public ObservableDictionary<CityTimeZone, CityTimeZoneModel> CitiesView { get; } = [];
@@ -168,7 +167,7 @@ internal sealed partial class MainWindowViewModel : WindowViewModelBase
             Throw.InvalidOperationExceptionIf(ViewWindowService?.Name != "Windows", $"{nameof(ViewWindowService)} is invalid");
         }
 
-        Title = $"WPF Multi-Threaded App - Main Window";
+        Title = $"WPF Multi-Threaded App - {Loc.Main_Window}";
     }
 
     protected override async ValueTask OnContentRenderedAsync(CancellationToken cancellationToken)

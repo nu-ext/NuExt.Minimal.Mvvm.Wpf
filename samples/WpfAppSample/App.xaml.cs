@@ -125,7 +125,12 @@ public sealed partial class App : IServiceProvider, IDispatcherObject
 
         ConfigureLogging(environmentService);
 
-        environmentService.LoadLocalization(typeof(Loc), CultureInfo.CurrentUICulture.IetfLanguageTag);
+        var culture = CultureInfo.CurrentUICulture.IetfLanguageTag;
+        var langFilePath = Path.Combine(environmentService.ConfigDirectory, $"local.{culture}.json");
+        if (File.Exists(langFilePath))
+        {
+            Loc.LoadFromJsonFile(langFilePath);
+        }
 
         var logger = GetService<ILogger>();
         logger?.LogInformation("Application started.");
