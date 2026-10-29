@@ -23,20 +23,20 @@ public abstract class SettingsBase : ModelBase
     /// </summary>
     private sealed class DirtySuspender : IDisposable
     {
-        private readonly SettingsBase _this;
+        private readonly SettingsBase _owner;
         private int _isDisposed;
 
-        public DirtySuspender(SettingsBase self)
+        public DirtySuspender(SettingsBase owner)
         {
-            _this = self;
-            Interlocked.Increment(ref _this._isDirtySuspended);
+            _owner = owner;
+            Interlocked.Increment(ref _owner._isDirtySuspended);
         }
 
         public void Dispose()
         {
             if (Interlocked.Exchange(ref _isDisposed, 1) == 0)
             {
-                Interlocked.Decrement(ref _this._isDirtySuspended);
+                Interlocked.Decrement(ref _owner._isDirtySuspended);
             }
         }
     }
@@ -116,11 +116,9 @@ public abstract class SettingsBase : ModelBase
     protected override bool CanSetProperty<T>(T oldValue, T newValue, [CallerMemberName] string? propertyName = null)
     {
         Debug.Assert(propertyName != nameof(IsDirty) && propertyName != nameof(IsSuspended));
-        if (IsSuspended || !IsValidPropertyValue(propertyName, newValue))
-        {
-            return false;
-        }
-        return base.CanSetProperty(oldValue, newValue, propertyName);
+
+        return base.CanSetProperty(oldValue, newValue, propertyName) &&
+               !IsSuspended && IsValidPropertyValue(propertyName, newValue);
     }
 
     /// <summary>
@@ -160,7 +158,7 @@ public abstract class SettingsBase : ModelBase
     }
 
     /// <summary>
-    /// Resumes property change notifications after they were suspended.
+    /// Resumes property changes after they were suspended.
     /// </summary>
     public void ResumeChanges()
     {
