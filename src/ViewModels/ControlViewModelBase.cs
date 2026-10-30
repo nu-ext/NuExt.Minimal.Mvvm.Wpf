@@ -34,6 +34,8 @@ public partial class ControlViewModelBase : CommandViewModelBase, IControlViewMo
     private volatile int _state;
 #endif
 
+    private readonly int _ownerThreadId = Environment.CurrentManagedThreadId;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ControlViewModelBase"/> class.
     /// </summary>
@@ -359,7 +361,7 @@ public partial class ControlViewModelBase : CommandViewModelBase, IControlViewMo
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool CheckAccess()
     {
-        return GetDispatcherService().CheckAccess();
+        return DispatcherService?.CheckAccess() ?? Environment.CurrentManagedThreadId == _ownerThreadId;
     }
 
     ///<inheritdoc/>

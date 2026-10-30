@@ -35,7 +35,7 @@ public partial class WindowViewModelBase : ControlViewModelBase, IWindowViewMode
     {
     }
 
-    #region Properties
+    // Properties
 
     /// <inheritdoc/>
     public CancellationToken CancellationToken => _cts.Token;
@@ -46,9 +46,7 @@ public partial class WindowViewModelBase : ControlViewModelBase, IWindowViewMode
     [Notify]
     public partial string Title { get; set; }
 
-    #endregion
-
-    #region Services
+    // Services
 
     /// <summary>
     /// Gets the <see cref="IOpenWindowsService"/> responsible for managing open windows.
@@ -60,9 +58,7 @@ public partial class WindowViewModelBase : ControlViewModelBase, IWindowViewMode
     /// </summary>
     private IWindowService? WindowService => field ??= GetService<IWindowService>();
 
-    #endregion
-
-    #region Methods
+    // Methods
 
     /// <inheritdoc/>
     public virtual ValueTask<bool> CanCloseAsync(CancellationToken cancellationToken)
@@ -194,6 +190,4 @@ public partial class WindowViewModelBase : ControlViewModelBase, IWindowViewMode
         _ = windowService ?? throw new InvalidOperationException($"{GetType().FullName} ({DisplayName ?? "Unnamed"}) ({RuntimeHelpers.GetHashCode(this):X8}): IWindowService is not registered.");
         return windowService;
     }
-
-    #endregion
 }

@@ -41,12 +41,43 @@ public static class AsyncDocumentManagerServiceExtensions
         ArgumentNullException.ThrowIfNull(service);
         ArgumentNullException.ThrowIfNull(createDocumentCallback);
 
-        IAsyncDocument? document = service.FindDocumentById(id);
+        var document = service.FindDocumentById(id);
         if (document == null)
         {
             document = await createDocumentCallback(service);
             document.Id = id;
         }
+        return document;
+    }
+
+    /// <summary>
+    /// Finds an asynchronous document by its ID, or creates a new document using the specified state if it does not exist.
+    /// </summary>
+    /// <typeparam name="TState">The type of the state passed to the document creation callback.</typeparam>
+    /// <param name="service">The document manager service to search in.</param>
+    /// <param name="id">The ID of the document to find or create.</param>
+    /// <param name="state">The state passed to the document creation callback.</param>
+    /// <param name="createDocumentCallback">The callback function to create a new document if none is found.</param>
+    /// <returns>The found or newly created asynchronous document.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown if <paramref name="service"/> or <paramref name="createDocumentCallback"/> is null.
+    /// </exception>
+    public static async ValueTask<IAsyncDocument> FindDocumentByIdOrCreateAsync<TState>(
+        this IAsyncDocumentManagerService service,
+        object id,
+        TState state,
+        Func<IAsyncDocumentManagerService, TState, ValueTask<IAsyncDocument>> createDocumentCallback)
+    {
+        ArgumentNullException.ThrowIfNull(service);
+        ArgumentNullException.ThrowIfNull(createDocumentCallback);
+
+        var document = service.FindDocumentById(id);
+        if (document == null)
+        {
+            document = await createDocumentCallback(service, state);
+            document.Id = id;
+        }
+
         return document;
     }
 
@@ -79,37 +110,77 @@ public static class AsyncDocumentManagerServiceExtensions
         ArgumentNullException.ThrowIfNull(service);
         ArgumentNullException.ThrowIfNull(viewModelFactory);
 
-        return service.FindDocumentByIdOrCreateAsync(id, CreateDocumentAsync);
+        var state = (
+            DocumentType: documentType,
+            ViewModelFactory: viewModelFactory,
+            ParentViewModel: parentViewModel,
+            Parameter: parameter,
+            CancellationToken: cancellationToken);
 
-        async ValueTask<IAsyncDocument> CreateDocumentAsync(IAsyncDocumentManagerService manager)
+        return service.FindDocumentByIdOrCreateAsync(id, state, static (service, state) =>
+            service.CreateDocumentAsync(
+                documentType: state.DocumentType,
+                viewModelFactory: state.ViewModelFactory,
+                parentViewModel: state.ParentViewModel,
+                parameter: state.Parameter,
+                cancellationToken: state.CancellationToken));
+    }
+
+    /// <summary>
+    /// Creates a document with a new ViewModel.
+    /// </summary>
+    /// <typeparam name="TViewModel">The type of the document ViewModel.</typeparam>
+    /// <param name="service">The document manager service.</param>
+    /// <param name="documentType">The name of the View to create.</param>
+    /// <param name="viewModelFactory">The factory that creates the document ViewModel.</param>
+    /// <param name="parentViewModel">The parent ViewModel.</param>
+    /// <param name="parameter">The initialization parameter.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>The newly created document.</returns>
+    /// <remarks>
+    /// The newly created ViewModel remains owned by this operation until document creation succeeds.
+    /// The document takes ownership after successful creation and disposes the ViewModel when closed.
+    /// </remarks>
+    public static async ValueTask<IAsyncDocument> CreateDocumentAsync<TViewModel>(
+        this IAsyncDocumentManagerService service,
+        string? documentType,
+        Func<TViewModel> viewModelFactory,
+        object? parentViewModel,
+        object? parameter,
+        CancellationToken cancellationToken = default)
+        where TViewModel : class, IAsyncDisposable
+    {
+        ArgumentNullException.ThrowIfNull(service);
+        ArgumentNullException.ThrowIfNull(viewModelFactory);
+
+        var viewModel = viewModelFactory();
+
+        try
         {
-            var viewModel = viewModelFactory();
+            var document = await service.CreateDocumentAsync(
+                documentType: documentType,
+                viewModel: viewModel,
+                parentViewModel: parentViewModel,
+                parameter: parameter,
+                cancellationToken: cancellationToken);
+
+            document.DisposeOnClose = true;
+            return document;
+        }
+        catch
+        {
             try
             {
-                var document = await manager.CreateDocumentAsync(
-                    documentType: documentType,
-                    viewModel: viewModel,
-                    parentViewModel: parentViewModel,
-                    parameter: parameter,
-                    cancellationToken: cancellationToken);
-
-                document.DisposeOnClose = true;
-                return document;
+                await viewModel.DisposeAsync();
             }
             catch
             {
-                try
-                {
-                    await viewModel.DisposeAsync();
-                }
-                catch
-                {
-                    var msg = $"Failed to dispose the ViewModel {viewModel.GetType().FullName} after document {documentType} with id {id} creation failed.";
-                    Trace.WriteLine(msg);
-                    Debug.Fail(msg);
-                }
-                throw;
+                var msg = $"Failed to dispose the ViewModel {viewModel.GetType().FullName} after document {documentType} creation failed.";
+                Trace.WriteLine(msg);
+                Debug.Fail(msg);
             }
+
+            throw;
         }
     }
 }

@@ -53,11 +53,7 @@ public class WindowService : WindowServiceBase, IWindowService
     private void OnWindowClosing(object? sender, CancelEventArgs e)
     {
         var command = ClosingCommand;
-        if (command == null)
-        {
-            return;
-        }
-        if (command.CanExecute(e))
+        if (command?.CanExecute(e) == true)
         {
             command.Execute(e);
         }

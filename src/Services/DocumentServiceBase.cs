@@ -1,10 +1,11 @@
-﻿using Presentation.Wpf;
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
+using Presentation.Wpf;
 
 namespace Minimal.Mvvm.Wpf;
 
@@ -22,6 +23,12 @@ public abstract class DocumentServiceBase : ViewServiceBase
         nameof(ActiveDocument), typeof(IAsyncDocument), typeof(DocumentServiceBase), 
         new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, 
             (d, e) => ((DocumentServiceBase)d).OnActiveDocumentChanged(e.OldValue as IAsyncDocument, e.NewValue as IAsyncDocument)));
+
+    /// <summary>
+    /// Identifies the <see cref="ActiveDocumentChangedCommand"/> dependency property.
+    /// </summary>
+    public static readonly DependencyProperty ActiveDocumentChangedCommandProperty = DependencyProperty.Register(
+        nameof(ActiveDocumentChangedCommand), typeof(ICommand), typeof(DocumentServiceBase));
 
     /// <summary>
     /// Identifies the Document attached dependency property.
@@ -54,6 +61,18 @@ public abstract class DocumentServiceBase : ViewServiceBase
     }
 
     /// <summary>
+    /// Gets or sets the command invoked when the active document changes.
+    /// </summary>
+    /// <remarks>
+    /// The command parameter is an <see cref="ActiveDocumentChangedEventArgs"/> instance.
+    /// </remarks>
+    public ICommand? ActiveDocumentChangedCommand
+    {
+        get => (ICommand?)GetValue(ActiveDocumentChangedCommandProperty);
+        set => SetValue(ActiveDocumentChangedCommandProperty, value);
+    }
+
+    /// <summary>
     /// Gets or sets the type of the fallback View to create when no document type or View template is specified.
     /// </summary>
     public Type? FallbackViewType
@@ -83,7 +102,13 @@ public abstract class DocumentServiceBase : ViewServiceBase
     protected virtual void OnActiveDocumentChanged(IAsyncDocument? oldValue, IAsyncDocument? newValue)
     {
         Debug.Assert(CheckAccess());
-        ActiveDocumentChanged?.Invoke(this, new ActiveDocumentChangedEventArgs(oldValue, newValue));
+
+        var e = new ActiveDocumentChangedEventArgs(oldValue, newValue);
+        ActiveDocumentChanged?.Invoke(this, e);
+
+        var command = ActiveDocumentChangedCommand;
+        if (command?.CanExecute(e) == true)
+            command.Execute(e);
     }
 
     /// <summary>
