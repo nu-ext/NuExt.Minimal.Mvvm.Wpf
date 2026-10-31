@@ -198,7 +198,6 @@ public abstract class DocumentServiceBase : ViewServiceBase
 
 internal static partial class EventArgsCache
 {
-    internal static readonly PropertyChangedEventArgs ActiveDocumentPropertyChanged = new(nameof(IAsyncDocumentManagerService.ActiveDocument));
     internal static readonly PropertyChangedEventArgs CountPropertyChanged = new(nameof(IAsyncDocumentManagerService.Count));
     internal static readonly PropertyChangedEventArgs TitlePropertyChanged = new(nameof(IAsyncDocument.Title));
 }

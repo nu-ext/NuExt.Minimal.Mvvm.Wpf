@@ -1,4 +1,6 @@
-﻿using System;
+﻿#define TRACE_LIFETIME_
+
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -57,10 +59,12 @@ public partial class ControlViewModelBase : CommandViewModelBase, IControlViewMo
         {
             return;
         }
+
         Lifetime.AddBracket(() => Disposing += OnDisposing, () => Disposing -= OnDisposing);
-        Lifetime.AddBracket(() => PropertyChanged += OnPropertyChanged, () => PropertyChanged -= OnPropertyChanged);
         Lifetime.AddBracket(CreateCommands, NullifyCommands);//operation after WaitAsyncCommands
         Lifetime.AddAsync(() => WaitAsyncCommands());
+
+        PropertyChanged += OnPropertyChanged;
     }
 
     #region Properties
@@ -266,7 +270,9 @@ public partial class ControlViewModelBase : CommandViewModelBase, IControlViewMo
             return;
         }
         _state = States.Disposing;
-
+#if TRACE_LIFETIME
+        Trace.WriteLine($"{GetType().FullName} ({DisplayName ?? "Unnamed"}) ({RuntimeHelpers.GetHashCode(this):X8}) is disposing");
+#endif
         OnPropertyChanged(EventArgsCache.IsDisposingPropertyChanged);
         try
         {
@@ -276,7 +282,13 @@ public partial class ControlViewModelBase : CommandViewModelBase, IControlViewMo
                 await disposing.InvokeAsync(this, EventArgs.Empty, continueOnCapturedContext: true);
             }
             await DisposeAsyncCore();
+#if TRACE_LIFETIME
+            Trace.WriteLine($"{GetType().FullName} ({DisplayName ?? "Unnamed"}) ({RuntimeHelpers.GetHashCode(this):X8}) is cleaning up services");
+#endif
             await CleanupServicesAsync();
+#if TRACE_LIFETIME
+            Trace.WriteLine($"{GetType().FullName} ({DisplayName ?? "Unnamed"}) ({RuntimeHelpers.GetHashCode(this):X8}) has cleaned up services");
+#endif
             ValidateFinalState();
             if (Disposing != null)
             {
@@ -298,6 +310,9 @@ public partial class ControlViewModelBase : CommandViewModelBase, IControlViewMo
             _state = States.Disposed;
             GC.SuppressFinalize(this);
             RaisePropertiesChangedAndClearHandlers(EventArgsCache.IsDisposingPropertyChanged, EventArgsCache.IsDisposedPropertyChanged);
+#if TRACE_LIFETIME
+            Trace.WriteLine($"{GetType().FullName} ({DisplayName ?? "Unnamed"}) ({RuntimeHelpers.GetHashCode(this):X8}) has been disposed");
+#endif
         }
     }
 

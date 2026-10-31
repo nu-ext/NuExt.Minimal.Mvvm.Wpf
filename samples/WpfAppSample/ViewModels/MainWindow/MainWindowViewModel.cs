@@ -169,8 +169,10 @@ internal sealed partial class MainWindowViewModel : WindowViewModelBase
         MessageBox.Show(GetWindow(), string.Format(Loc.An_error_has_occurred_in_Arg0_Arg1, callerName, ex.Message), Loc.Error, MessageBoxButton.OK, MessageBoxImage.Error);
     }
 
-    protected override Task InitializeAsyncCore(CancellationToken cancellationToken)
+    protected override async Task InitializeAsyncCore(CancellationToken cancellationToken)
     {
+        await base.InitializeAsyncCore(cancellationToken);
+
         Debug.Assert(EnvironmentService != null, $"{nameof(EnvironmentService)} is null");
         Debug.Assert(MoviesService != null, $"{nameof(MoviesService)} is null");
         Debug.Assert(SettingsService != null, $"{nameof(SettingsService)} is null");
@@ -191,8 +193,6 @@ internal sealed partial class MainWindowViewModel : WindowViewModelBase
                 () => notifyPropertyChanged1.PropertyChanged += WindowManagerService_PropertyChanged,
                 () => notifyPropertyChanged1.PropertyChanged -= WindowManagerService_PropertyChanged);
         }
-
-        return base.InitializeAsyncCore(cancellationToken);
     }
 
     private void UpdateTitle()

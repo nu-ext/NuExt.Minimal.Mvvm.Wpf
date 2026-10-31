@@ -35,7 +35,7 @@ public static class CommandExtensions
     /// <exception cref="ArgumentNullException">Thrown when the command is null.</exception>
     public static void RaiseCanExecuteChanged(this ICommand command)
     {
-        Throw.IfNull(command);
+        ArgumentNullException.ThrowIfNull(command);
 
         if (command is IRelayCommand relayCommand)
         {

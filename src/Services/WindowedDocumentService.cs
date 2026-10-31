@@ -1,6 +1,4 @@
-﻿using Presentation.Wpf;
-using Presentation.Wpf.Controls;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -13,6 +11,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Threading;
+using Presentation.Wpf;
+using Presentation.Wpf.Controls;
 
 namespace Minimal.Mvvm.Wpf;
 
@@ -24,7 +24,7 @@ public class WindowedDocumentService : DocumentServiceBase, IAsyncDocumentManage
 {
     #region WindowedDocument
 
-    private class WindowedDocument : AsyncDisposable, IAsyncDocument
+    protected class WindowedDocument : AsyncDisposable, IAsyncDocument
     {
         private readonly AsyncLifetime _lifetime = new AsyncLifetime() { ContinueOnCapturedContext = true }
 #if DEBUG
@@ -38,7 +38,7 @@ public class WindowedDocumentService : DocumentServiceBase, IAsyncDocumentManage
         private bool? _isViewModelDisposed;
         private readonly Action _onTitleChanged;
 
-        public WindowedDocument(WindowedDocumentService owner, Window window, AsyncLifetime lifetime)
+        internal WindowedDocument(WindowedDocumentService owner, Window window, AsyncLifetime lifetime)
         {
             Owner = owner ?? throw new ArgumentNullException(nameof(owner));
             Window = window ?? throw new ArgumentNullException(nameof(window));
@@ -91,24 +91,16 @@ public class WindowedDocumentService : DocumentServiceBase, IAsyncDocumentManage
 
         private CancellationToken CancellationToken => _cts.Token;
 
-        /// <summary>
-        /// Gets or sets a value indicating whether the view model should be disposed when the document closes.
-        /// </summary>
+        /// <inheritdoc/>
         public bool DisposeOnClose { get; set; }
 
-        /// <summary>
-        /// Gets or sets a value indicating whether the window should be hidden instead of closed.
-        /// </summary>
+        /// <inheritdoc/>
         public bool HideInsteadOfClose { get; set; }
 
-        /// <summary>
-        /// Gets or sets the identifier for this document.
-        /// </summary>
+        /// <inheritdoc/>
         public object Id { get; set; } = null!;
 
-        /// <summary>
-        /// Gets or sets the document title.
-        /// </summary>
+        /// <inheritdoc/>
         public string Title
         {
             get;
@@ -161,7 +153,7 @@ public class WindowedDocumentService : DocumentServiceBase, IAsyncDocumentManage
             }
 
             e.Cancel = true;
-            _ = Window.Dispatcher.InvokeAsync(async () => await CloseWindowAsync(this, CancellationToken));
+            _ = Window.Dispatcher.InvokeAsync(async () => await CloseWindowAsync(this, CancellationToken).ConfigureAwait(false));
         }
 
         private static async ValueTask CloseWindowAsync(WindowedDocument document, CancellationToken cancellationToken)
@@ -244,24 +236,27 @@ public class WindowedDocumentService : DocumentServiceBase, IAsyncDocumentManage
             {
                 return;
             }
-            if (force)
-            {
-#if NET8_0_OR_GREATER
-                await _cts.CancelAsync();
-#else
-                _cts.Cancel();
-#endif
-            }
+
             _isClosing = true;
             try
             {
-                if (!force)
+
+                if (force)
+                {
+#if NET8_0_OR_GREATER
+                    await _cts.CancelAsync();
+#else
+                    _cts.Cancel();
+#endif
+                }
+                else
                 {
                     if (await CanCloseAsync(Window, CancellationToken) == false)
                     {
                         return;
                     }
                 }
+
                 await DisposeAsync().ConfigureAwait(false);
             }
             catch (Exception ex)
@@ -453,20 +448,21 @@ public class WindowedDocumentService : DocumentServiceBase, IAsyncDocumentManage
     protected override void OnActiveDocumentChanged(IAsyncDocument? oldValue, IAsyncDocument? newValue)
     {
         Debug.Assert(oldValue != newValue);
-
         VerifyAccess();
-        if (!_isActiveDocumentChanging)
+
+        if (!_isActiveDocumentChanging && newValue != null)
         {
             _isActiveDocumentChanging = true;
             try
             {
-                newValue?.Show();
+                newValue.Show();
             }
             finally
             {
                 _isActiveDocumentChanging = false;
             }
         }
+
         base.OnActiveDocumentChanged(oldValue, newValue);
     }
 
@@ -594,8 +590,8 @@ public class WindowedDocumentService : DocumentServiceBase, IAsyncDocumentManage
             Debug.Assert(viewModel != null);
             switch (viewModel)
             {
-                case IAsyncDocumentContent { } documentContent when await documentContent.CanCloseAsync(cancellationToken) == false:
-                case IWindowViewModel { } windowViewModel when await windowViewModel.CanCloseAsync(cancellationToken) == false:
+                case IAsyncDocumentContent documentContent when await documentContent.CanCloseAsync(cancellationToken) == false:
+                case IWindowViewModel windowViewModel when await windowViewModel.CanCloseAsync(cancellationToken) == false:
                     cancellationToken.ThrowIfCancellationRequested();
                     return false;
             }

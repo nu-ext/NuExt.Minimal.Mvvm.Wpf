@@ -1,4 +1,6 @@
-﻿using System;
+﻿#define TRACE_LIFETIME_
+using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -10,6 +12,7 @@ namespace Minimal.Mvvm.Wpf;
 /// Base class for window ViewModels, providing window lifecycle management,
 /// state, services, and commands for interacting with the window.
 /// </summary>
+[GenerateCommands]
 public partial class WindowViewModelBase : ControlViewModelBase, IWindowViewModel
 {
     private readonly CancellationTokenSource _cts = new();
@@ -33,6 +36,12 @@ public partial class WindowViewModelBase : ControlViewModelBase, IWindowViewMode
     protected WindowViewModelBase(IServiceContainer? fallbackServices)
         : base(fallbackServices)
     {
+        if (ViewModelHelper.IsInDesignMode)
+        {
+            return;
+        }
+
+        PropertyChanged += OnPropertyChanged;
     }
 
     // Properties
@@ -43,7 +52,7 @@ public partial class WindowViewModelBase : ControlViewModelBase, IWindowViewMode
     /// <summary>
     /// Gets or sets the title of the window.
     /// </summary>
-    [Notify]
+    [Notify(CallbackName = nameof(OnTitleChanged))]
     public partial string Title { get; set; }
 
     // Services
@@ -60,21 +69,18 @@ public partial class WindowViewModelBase : ControlViewModelBase, IWindowViewMode
 
     // Methods
 
+    /// <summary>
+    /// Occurs when the <see cref="Title"/> property changes, allowing derived classes to respond to title updates.
+    /// </summary>
+    protected virtual void OnTitleChanged()
+    {
+        DisplayName ??= Title;
+    }
+
     /// <inheritdoc/>
     public virtual ValueTask<bool> CanCloseAsync(CancellationToken cancellationToken)
     {
         return cancellationToken.IsCancellationRequested ? ValueTask.FromCanceled<bool>(cancellationToken) : ValueTask.FromResult(true);
-    }
-
-    /// <summary>
-    /// Closes the window by calling the current window service.
-    /// </summary>
-    private void Close()
-    {
-        Debug.Assert(CheckAccess());
-        VerifyAccess();
-
-        GetWindowService().Close();
     }
 
     /// <inheritdoc/>
@@ -104,18 +110,20 @@ public partial class WindowViewModelBase : ControlViewModelBase, IWindowViewMode
         {
             return;
         }
-        if (force)
-        {
-#if NET8_0_OR_GREATER
-            await _cts.CancelAsync();
-#else
-            _cts.Cancel();
-#endif
-        }
+
         _isClosing = true;
         try
         {
-            if (!force)
+
+            if (force)
+            {
+#if NET8_0_OR_GREATER
+                await _cts.CancelAsync();
+#else
+            _cts.Cancel();
+#endif
+            }
+            else
             {
                 try
                 {
@@ -147,6 +155,21 @@ public partial class WindowViewModelBase : ControlViewModelBase, IWindowViewMode
         }
     }
 
+    private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(IsDisposed) && IsDisposed)
+        {
+#if TRACE_LIFETIME
+            Trace.WriteLine($"{GetType().FullName} ({DisplayName ?? "Unnamed"}) ({RuntimeHelpers.GetHashCode(this):X8}) is closing");
+#endif
+            Close();
+#if TRACE_LIFETIME
+            Trace.WriteLine($"{GetType().FullName} ({DisplayName ?? "Unnamed"}) ({RuntimeHelpers.GetHashCode(this):X8}) is closed");
+#endif
+            _cts.Dispose();
+        }
+    }
+
     /// <inheritdoc/>
     protected override async ValueTask DisposeAsyncCore()
     {
@@ -159,8 +182,6 @@ public partial class WindowViewModelBase : ControlViewModelBase, IWindowViewMode
 #endif
         Hide();
         await base.DisposeAsyncCore();
-        Close();
-        _cts.Dispose();
     }
 
     /// <inheritdoc/>

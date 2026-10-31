@@ -33,12 +33,20 @@ public abstract partial class DocumentContentViewModelBase : ControlViewModelBas
     /// <summary>
     /// Gets or sets the title of the document.
     /// </summary>
-    [Notify]
+    [Notify(CallbackName = nameof(OnTitleChanged))]
     public partial string Title { get; set; }
 
     #endregion
 
     #region Methods
+
+    /// <summary>
+    /// Occurs when the <see cref="Title"/> property changes, allowing derived classes to respond to title updates.
+    /// </summary>
+    protected virtual void OnTitleChanged()
+    {
+        DisplayName ??= Title;
+    }
 
     /// <summary>
     /// Determines asynchronously whether the document can be closed.

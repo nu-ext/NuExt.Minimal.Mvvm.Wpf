@@ -1,5 +1,4 @@
-﻿using Presentation.Wpf.Controls;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -11,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using Presentation.Wpf.Controls;
 
 namespace Minimal.Mvvm.Wpf;
 
@@ -22,7 +22,7 @@ public class TabbedDocumentService : DocumentServiceBase, IAsyncDocumentManagerS
 {
     #region TabbedDocument
 
-    protected class TabbedDocument : AsyncDisposable, IAsyncDocument
+    protected sealed class TabbedDocument : AsyncDisposable, IAsyncDocument
     {
         private readonly AsyncLifetime _lifetime = new AsyncLifetime() { ContinueOnCapturedContext = true }
 #if DEBUG
@@ -30,9 +30,8 @@ public class TabbedDocumentService : DocumentServiceBase, IAsyncDocumentManagerS
 #endif
             ;
         private readonly CancellationTokenSource _cts = new();
-        private bool _isClosing;
 
-        public TabbedDocument(TabbedDocumentService owner, TabItem tabItem)
+        internal TabbedDocument(TabbedDocumentService owner, TabItem tabItem)
         {
             ArgumentNullException.ThrowIfNull(owner);
             TabItem = tabItem ?? throw new ArgumentNullException(nameof(tabItem));
@@ -42,11 +41,11 @@ public class TabbedDocumentService : DocumentServiceBase, IAsyncDocumentManagerS
 
             _lifetime.AddDisposable(_cts);
             _lifetime.AddBracket(() => owner.AddDocument(this), () => owner.RemoveDocument(this));
-            _lifetime.Add(() => TabControl?.Items.Remove(TabItem));//second, remove tab item
-            _lifetime.Add(() => TabItem.ClearStyle());//first, clear tab item style
-            _lifetime.Add(() => owner.ClearAllBindings(TabItem));//third, detach vm
-            _lifetime.Add(() => ViewModelHelper.DetachContentFromContainer(TabItem));//second, detach content
-            _lifetime.AddAsync(DisposeViewModelAsync);//first, dispose vm
+            _lifetime.Add(() => TabControl?.Items.Remove(TabItem));//5) remove tab item
+            _lifetime.Add(() => TabItem.ClearStyle());//4) clear tab item style
+            _lifetime.Add(() => owner.ClearAllBindings(TabItem));//3) detach vm
+            _lifetime.Add(() => ViewModelHelper.DetachContentFromContainer(TabItem));//2) detach content
+            _lifetime.AddAsync(DisposeViewModelAsync);//1) dispose vm
             _lifetime.AddBracket(() => SetDocument(TabItem, this), () => SetDocument(TabItem, null));
             _lifetime.AddBracket(
                 () => TabItem.IsVisibleChanged += OnTabIsVisibleChanged,
@@ -72,35 +71,27 @@ public class TabbedDocumentService : DocumentServiceBase, IAsyncDocumentManagerS
 
         public CancellationToken CancellationToken => _cts.Token;
 
-        /// <summary>
-        /// Gets or sets a value indicating whether the view model should be disposed when the document closes.
-        /// </summary>
+        /// <inheritdoc/>
         public bool DisposeOnClose { get; set; }
 
-        /// <summary>
-        /// Gets or sets a value indicating whether the tab should be hidden instead of closed.
-        /// </summary>
+        /// <inheritdoc/>
         public bool HideInsteadOfClose { get; set; }
 
-        /// <summary>
-        /// Gets or sets the identifier for this document.
-        /// </summary>
+        /// <inheritdoc/>
         public object Id { get; set; } = null!;
 
-        public bool IsClosing => _isClosing;
-
-        private TabControl? TabControl => TabItem.Parent as TabControl;
-
-        public TabItem TabItem { get; }
-
-        /// <summary>
-        /// Gets or sets the document title.
-        /// </summary>
+        /// <inheritdoc/>
         public string Title
         {
             get => TabItem.Header?.ToString() ?? string.Empty;
             set => TabItem.Header = value;
         }
+
+        public bool IsClosing { get; private set; }
+
+        private TabControl? TabControl => TabItem.Parent as TabControl;
+
+        public TabItem TabItem { get; }
 
         #endregion
 
@@ -147,33 +138,36 @@ public class TabbedDocumentService : DocumentServiceBase, IAsyncDocumentManagerS
             VerifyAccess();
             CheckDisposed();
 
-            if (_isClosing)
+            if (IsClosing)
             {
                 return;
             }
-            if (force)
-            {
-#if NET8_0_OR_GREATER
-                await _cts.CancelAsync();
-#else
-                _cts.Cancel();
-#endif
-            }
-            _isClosing = true;
+
+            IsClosing = true;
             try
             {
-                if (!force)
+
+                if (force)
+                {
+#if NET8_0_OR_GREATER
+                    await _cts.CancelAsync();
+#else
+                    _cts.Cancel();
+#endif
+                }
+                else
                 {
                     if (await CanCloseAsync(TabItem, CancellationToken) == false)
                     {
                         return;
                     }
                 }
+
                 await DisposeAsync().ConfigureAwait(false);
             }
             finally
             {
-                _isClosing = false;
+                IsClosing = false;
             }
         }
 
@@ -202,12 +196,11 @@ public class TabbedDocumentService : DocumentServiceBase, IAsyncDocumentManagerS
             return ValueTask.CompletedTask;
         }
 
-        /// <summary>
-        /// Hides the document tab.
-        /// </summary>
+        /// <inheritdoc/>
         public void Hide()
         {
             CheckDisposed();
+            VerifyAccess();
 
             if (TabItem.Visibility != Visibility.Collapsed)
             {
@@ -216,12 +209,11 @@ public class TabbedDocumentService : DocumentServiceBase, IAsyncDocumentManagerS
             TabItem.IsSelected = false;
         }
 
-        /// <summary>
-        /// Shows the document tab.
-        /// </summary>
+        /// <inheritdoc/>
         public void Show()
         {
             CheckDisposed();
+            VerifyAccess();
 
             if (TabItem.Visibility != Visibility.Visible)
             {
@@ -261,19 +253,47 @@ public class TabbedDocumentService : DocumentServiceBase, IAsyncDocumentManagerS
 
     protected override void OnActiveDocumentChanged(IAsyncDocument? oldValue, IAsyncDocument? newValue)
     {
-        if (!_isActiveDocumentChanging)
+        Debug.Assert(oldValue != newValue);
+        VerifyAccess();
+
+        if (!_isActiveDocumentChanging && newValue != null)
         {
             _isActiveDocumentChanging = true;
             try
             {
-                newValue?.Show();
+                newValue.Show();
             }
             finally
             {
                 _isActiveDocumentChanging = false;
             }
         }
+
         base.OnActiveDocumentChanged(oldValue, newValue);
+    }
+
+    private void OnTabControlSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isActiveDocumentChanging)
+        {
+            return;
+        }
+
+        Debug.Assert(Equals(sender, AssociatedObject));
+        if (sender is not TabControl tabControl)
+        {
+            return;
+        }
+
+        _isActiveDocumentChanging = true;
+        try
+        {
+            ActiveDocument = tabControl.SelectedItem is TabItem tabItem ? GetDocument(tabItem) : null;
+        }
+        finally
+        {
+            _isActiveDocumentChanging = false;
+        }
     }
 
     private void OnDocumentsPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -281,41 +301,6 @@ public class TabbedDocumentService : DocumentServiceBase, IAsyncDocumentManagerS
         if (e.PropertyName == nameof(_documents.Count))
         {
             OnPropertyChanged(EventArgsCache.CountPropertyChanged);
-        }
-    }
-
-    private static async void OnTabControlItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        switch (e.Action)
-        {
-            case NotifyCollectionChangedAction.Add:
-            case NotifyCollectionChangedAction.Remove:
-                if (e.OldItems is { Count: > 0 })
-                {
-                    foreach (var item in e.OldItems)
-                    {
-                        if (item is not TabItem tab)
-                        {
-                            continue;
-                        }
-                        var document = GetDocument(tab);
-                        Debug.Assert(document is null, "The document associated with the removed tab should already be absent from the document collection.");
-                        if (document is not null)
-                        {
-                            try
-                            {
-                                await document.CloseAsync(force: true).ConfigureAwait(false);
-                            }
-                            catch (Exception ex)
-                            {
-                                var message = $"Error closing document {document}: {ex.Message}";
-                                Trace.WriteLine(message);
-                                Debug.Fail(message);
-                            }
-                        }
-                    }
-                }
-                break;
         }
     }
 
@@ -329,28 +314,6 @@ public class TabbedDocumentService : DocumentServiceBase, IAsyncDocumentManagerS
         Debug.Assert(_subscription == null);
         Disposable.DisposeAndNull(ref _subscription);
         _subscription = SubscribeTabControl(AssociatedObject);
-    }
-
-    private void OnTabControlSelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (_isActiveDocumentChanging)
-        {
-            return;
-        }
-        Debug.Assert(Equals(sender, AssociatedObject));
-        if (sender is not TabControl tabControl)
-        {
-            return;
-        }
-        _isActiveDocumentChanging = true;
-        try
-        {
-            ActiveDocument = (tabControl.SelectedItem is TabItem tabItem) ? GetDocument(tabItem) : null;
-        }
-        finally
-        {
-            _isActiveDocumentChanging = false;
-        }
     }
 
     #endregion
@@ -374,6 +337,7 @@ public class TabbedDocumentService : DocumentServiceBase, IAsyncDocumentManagerS
         try
         {
             var viewModel = ViewModelHelper.GetViewModelFromView(tabItem.Content);
+            Debug.Assert(viewModel != null);
             switch (viewModel)
             {
                 case IAsyncDocumentContent documentContent when await documentContent.CanCloseAsync(cancellationToken) == false:
@@ -393,7 +357,7 @@ public class TabbedDocumentService : DocumentServiceBase, IAsyncDocumentManagerS
     public async ValueTask<IAsyncDocument> CreateDocumentAsync(string? documentType, object? viewModel,
         object? parentViewModel, object? parameter, CancellationToken cancellationToken = default)
     {
-        Throw.IfNull(AssociatedObject);
+        ArgumentNullException.ThrowIfNull(AssociatedObject);
         cancellationToken.ThrowIfCancellationRequested();
 
         var view = await CreateViewAsync(documentType, cancellationToken);
@@ -404,8 +368,16 @@ public class TabbedDocumentService : DocumentServiceBase, IAsyncDocumentManagerS
 
         await ViewModelHelper.InitializeViewAsync(view, viewModel, parentViewModel, parameter, cancellationToken);
 
-        AssociatedObject.Items.Add(tabItem);
         var document = new TabbedDocument(this, tabItem) { ContinueOnCapturedContext = true };
+        try
+        {
+            AssociatedObject.Items.Add(tabItem);
+        }
+        catch (Exception)
+        {
+            await document.DisposeAsync().ConfigureAwait(false);
+            throw;
+        }
         return document;
     }
 
@@ -507,22 +479,22 @@ public class TabbedDocumentService : DocumentServiceBase, IAsyncDocumentManagerS
         {
             return null;
         }
+
         if (tabControl.ItemsSource != null)
         {
             Throw.InvalidOperationException("Can't use not null ItemsSource in this service.");
         }
+
         var lifetime = new Lifetime()
 #if DEBUG
             .SetDebugInfo()
 #endif
             ;
-        if (tabControl.Items is INotifyCollectionChanged collection)
-        {
-            lifetime.AddBracket(() => collection.CollectionChanged += OnTabControlItemsCollectionChanged,
-                () => collection.CollectionChanged -= OnTabControlItemsCollectionChanged);
-        }
-        lifetime.AddBracket(() => tabControl.SelectionChanged += OnTabControlSelectionChanged,
+
+        lifetime.AddBracket(
+            () => tabControl.SelectionChanged += OnTabControlSelectionChanged,
             () => tabControl.SelectionChanged -= OnTabControlSelectionChanged);
+
         return lifetime;
     }
 

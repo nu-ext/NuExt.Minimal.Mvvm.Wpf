@@ -1,5 +1,4 @@
-﻿using Minimal.Behaviors.Wpf;
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading;
@@ -8,11 +7,12 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Threading;
+using Minimal.Behaviors.Wpf;
 
 namespace Minimal.Mvvm.Wpf;
 
 /// <summary>
-/// Provides helper methods for managing the relationship between views and view models,
+/// Provides helper methods for managing the relationship between views and view models.
 /// </summary>
 public static class ViewModelHelper
 {
@@ -100,7 +100,8 @@ public static class ViewModelHelper
     /// <returns>Returns the title of the view model if it exists; otherwise, returns string.Empty.</returns>
     public static string GetViewModelTitle(object viewModel)
     {
-        Throw.IfNull(viewModel);
+        ArgumentNullException.ThrowIfNull(viewModel);
+
         if (viewModel is IAsyncDocumentContent documentContent)
         {
             return documentContent.Title;
@@ -110,8 +111,8 @@ public static class ViewModelHelper
             return windowViewModel.Title;
         }
         var titleProperty = viewModel.GetType().GetProperty(TitlePropertyName);
-        return titleProperty != null && titleProperty.PropertyType == typeof(string) && titleProperty is { CanRead: true } 
-            ? ((string?)titleProperty.GetValue(viewModel) ?? string.Empty) 
+        return titleProperty != null && titleProperty.PropertyType == typeof(string) && titleProperty is { CanRead: true }
+            ? ((string?)titleProperty.GetValue(viewModel) ?? string.Empty)
             : string.Empty;
     }
 
@@ -164,11 +165,27 @@ public static class ViewModelHelper
     /// <param name="sourceView">The view from which the view model will be retrieved.</param>
     /// <param name="property">The dependency property on the target object to which the binding will be set.</param>
     /// <param name="target">The object on which to set the binding.</param>
-    public static void SetDataContextBinding(object? sourceView, DependencyProperty property, DependencyObject target)
+    public static void SetDataContextBinding(object sourceView, DependencyProperty property, DependencyObject target)
     {
         Debug.Assert(sourceView != null);
+        ArgumentNullException.ThrowIfNull(sourceView);
+        ArgumentNullException.ThrowIfNull(property);
+        ArgumentNullException.ThrowIfNull(target);
 
-        BindingBase binding = sourceView switch
+        BindingOperations.SetBinding(target, property, CreateDataContextBindingFromView(sourceView));
+    }
+
+    /// <summary>
+    /// Creates a DataContext binding to the view model associated with the given view.
+    /// </summary>
+    /// <param name="sourceView">The view from which the view model will be retrieved.</param>
+    /// <returns>The created binding.</returns>
+    public static BindingBase CreateDataContextBindingFromView(object sourceView)
+    {
+        ArgumentNullException.ThrowIfNull(sourceView);
+        Debug.Assert(sourceView is not DispatcherObject dispatcherObject || dispatcherObject.CheckAccess());
+
+        return sourceView switch
         {
             ContentPresenter => new Binding
             {
@@ -180,11 +197,11 @@ public static class ViewModelHelper
             HeaderedContentControl => new PriorityBinding
             {
                 Bindings =
-                {
-                    new Binding { Path = new PropertyPath(nameof(HeaderedContentControl.Content)), Source = sourceView, Mode = BindingMode.OneWay },
-                    new Binding { Path = new PropertyPath(nameof(HeaderedContentControl.Header)),  Source = sourceView, Mode = BindingMode.OneWay },
-                    new Binding { Path = new PropertyPath(nameof(HeaderedContentControl.DataContext)), Source = sourceView, Mode = BindingMode.OneWay },
-                }
+            {
+                new Binding { Path = new PropertyPath(nameof(HeaderedContentControl.Content)), Source = sourceView, Mode = BindingMode.OneWay },
+                new Binding { Path = new PropertyPath(nameof(HeaderedContentControl.Header)), Source = sourceView, Mode = BindingMode.OneWay },
+                new Binding { Path = new PropertyPath(nameof(HeaderedContentControl.DataContext)), Source = sourceView, Mode = BindingMode.OneWay },
+            }
             },
 
             _ => new Binding
@@ -194,8 +211,6 @@ public static class ViewModelHelper
                 Mode = BindingMode.OneWay
             }
         };
-        Debug.Assert(sourceView is not DispatcherObject d || d.CheckAccess());
-        BindingOperations.SetBinding(target, property, binding);
     }
 
     /// <summary>
@@ -204,11 +219,27 @@ public static class ViewModelHelper
     /// <param name="sourceView">The view from which the view model will be retrieved.</param>
     /// <param name="property">The dependency property on the target object to which the binding will be set.</param>
     /// <param name="target">The object on which to set the binding.</param>
-    public static void SetViewTitleBinding(object? sourceView, DependencyProperty property, DependencyObject target)
+    public static void SetViewTitleBinding(object sourceView, DependencyProperty property, DependencyObject target)
     {
         Debug.Assert(sourceView != null);
+        ArgumentNullException.ThrowIfNull(sourceView);
+        ArgumentNullException.ThrowIfNull(property);
+        ArgumentNullException.ThrowIfNull(target);
 
-        BindingBase binding = sourceView switch
+        BindingOperations.SetBinding(target, property, CreateTitleBindingFromView(sourceView));
+    }
+
+    /// <summary>
+    /// Creates a binding to the title of the view model associated with the specified view.
+    /// </summary>
+    /// <param name="sourceView">The view from which the view model will be retrieved.</param>
+    /// <returns>The created title binding.</returns>
+    public static BindingBase CreateTitleBindingFromView(object sourceView)
+    {
+        ArgumentNullException.ThrowIfNull(sourceView);
+        Debug.Assert(sourceView is not DispatcherObject dispatcherObject || dispatcherObject.CheckAccess());
+
+        return sourceView switch
         {
             ContentPresenter => new Binding
             {
@@ -224,7 +255,7 @@ public static class ViewModelHelper
                 Bindings =
                 {
                     new Binding { Path = new PropertyPath("Content.Title"), Source = sourceView, Mode = BindingMode.TwoWay, FallbackValue = "", TargetNullValue = "" },
-                    new Binding { Path = new PropertyPath("Header.Title"),  Source = sourceView, Mode = BindingMode.TwoWay, FallbackValue = "", TargetNullValue = "" },
+                    new Binding { Path = new PropertyPath("Header.Title"), Source = sourceView, Mode = BindingMode.TwoWay, FallbackValue = "", TargetNullValue = "" },
                     new Binding { Path = new PropertyPath("DataContext.Title"), Source = sourceView, Mode = BindingMode.TwoWay, FallbackValue = "", TargetNullValue = "" },
                 }
             },
@@ -238,9 +269,6 @@ public static class ViewModelHelper
                 TargetNullValue = ""
             }
         };
-        Debug.Assert(sourceView is not DispatcherObject d || d.CheckAccess());
-        BindingOperations.SetBinding(target, property, binding);
-
     }
 
     /// <summary>
@@ -251,7 +279,8 @@ public static class ViewModelHelper
     /// <exception cref="ArgumentNullException">Thrown when the provided viewModel is null.</exception>
     public static bool ViewModelHasTitleProperty(object viewModel)
     {
-        Throw.IfNull(viewModel);
+        ArgumentNullException.ThrowIfNull(viewModel);
+
         if (viewModel is DocumentContentViewModelBase or WindowViewModelBase)
         {
             return true;

@@ -29,7 +29,8 @@
                             DirectoryName="{Binding EnvironmentService.SettingsDirectory, FallbackValue={x:Null}}"/>
         <nx:WindowedDocumentService x:Name="Windows" 
                                     ActiveDocument="{Binding ActiveWindow}"
-                                    FallbackViewType="{x:Type views:ErrorView}">
+                                    FallbackViewType="{x:Type views:ErrorView}"
+                                    ActiveDocumentChangedCommand="{Binding ActiveWindowChangedCommand}">
             <nx:WindowedDocumentService.WindowStyle>
                 <Style TargetType="{x:Type Window}">
                     <Setter Property="nx:Interaction.BehaviorsTemplate">
@@ -44,9 +45,6 @@
                     </Setter>
                 </Style>
             </nx:WindowedDocumentService.WindowStyle>
-            <nx:Interaction.Behaviors>
-                <nx:EventToCommand EventName="ActiveDocumentChanged" Command="{Binding ActiveWindowChangedCommand}"/>
-            </nx:Interaction.Behaviors>
         </nx:WindowedDocumentService>
     </nx:Interaction.Behaviors>
     <Grid>
@@ -62,10 +60,8 @@
             <nx:Interaction.Behaviors>
                 <nx:TabbedDocumentService x:Name="Documents"
                                           ActiveDocument="{Binding ActiveDocument}"
-                                          FallbackViewType="{x:Type views:ErrorView}">
-                    <nx:Interaction.Behaviors>
-                        <nx:EventToCommand EventName="ActiveDocumentChanged" Command="{Binding ActiveDocumentChangedCommand}"/>
-                    </nx:Interaction.Behaviors>
+                                          FallbackViewType="{x:Type views:ErrorView}"
+                                          ActiveDocumentChangedCommand="{Binding ActiveDocumentChangedCommand}">
                 </nx:TabbedDocumentService>
             </nx:Interaction.Behaviors>
         </controlzex:TabControlEx>
