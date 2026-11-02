@@ -152,6 +152,7 @@ public static class AsyncDocumentManagerServiceExtensions
     {
         ArgumentNullException.ThrowIfNull(service);
         ArgumentNullException.ThrowIfNull(viewModelFactory);
+        cancellationToken.ThrowIfCancellationRequested();
 
         var viewModel = viewModelFactory();
 

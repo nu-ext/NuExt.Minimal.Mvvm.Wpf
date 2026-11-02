@@ -28,6 +28,10 @@ public interface IAsyncDocumentManagerService : INamedService
     /// <returns>
     /// A task that represents the asynchronous operation. The task result contains the created asynchronous document.
     /// </returns>
+    /// <remarks>
+    /// Ownership of the view model is transferred to the document only after the document is created successfully.
+    /// The document disposes the view model when it is closed if <see cref="IAsyncDocument.DisposeOnClose"/> is set to <see langword="true"/>.
+    /// </remarks>
     /// <exception cref="OperationCanceledException">Thrown if the operation is cancelled.</exception>
     ValueTask<IAsyncDocument> CreateDocumentAsync(string? documentType, object? viewModel, object? parentViewModel,
         object? parameter, CancellationToken cancellationToken = default);

@@ -35,7 +35,7 @@ public abstract class ViewServiceBase : ServiceBase<Control>, IDispatcherObject
     /// </summary>
     public static readonly DependencyProperty ViewLocatorProperty = DependencyProperty.Register(
         nameof(ViewLocator), typeof(ViewLocatorBase), typeof(ViewServiceBase),
-        new PropertyMetadata(null, (d, e) => ((ViewServiceBase)d).OnViewLocatorChanged((ViewLocatorBase?)e.OldValue, (ViewLocatorBase?)e.NewValue)));
+        new PropertyMetadata(null, static (d, e) => ((ViewServiceBase)d).OnViewLocatorChanged((ViewLocatorBase?)e.OldValue, (ViewLocatorBase?)e.NewValue)));
 
     /// <summary>
     /// Identifies the <see cref="ViewTemplate"/> dependency property.

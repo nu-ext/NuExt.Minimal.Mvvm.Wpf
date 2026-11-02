@@ -22,7 +22,7 @@ public abstract class DocumentServiceBase : ViewServiceBase
     public static readonly DependencyProperty ActiveDocumentProperty = DependencyProperty.Register(
         nameof(ActiveDocument), typeof(IAsyncDocument), typeof(DocumentServiceBase), 
         new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, 
-            (d, e) => ((DocumentServiceBase)d).OnActiveDocumentChanged(e.OldValue as IAsyncDocument, e.NewValue as IAsyncDocument)));
+            static (d, e) => ((DocumentServiceBase)d).OnActiveDocumentChanged(e.OldValue as IAsyncDocument, e.NewValue as IAsyncDocument)));
 
     /// <summary>
     /// Identifies the <see cref="ActiveDocumentChangedCommand"/> dependency property.
@@ -35,8 +35,7 @@ public abstract class DocumentServiceBase : ViewServiceBase
     /// This property is used to associate an asynchronous document (IAsyncDocument) with a DependencyObject.
     /// </summary>
     public static readonly DependencyProperty DocumentProperty = DependencyProperty.RegisterAttached(
-        "Document", typeof(IAsyncDocument), typeof(DocumentServiceBase), new PropertyMetadata(null, 
-            (d, e) => OnDocumentChanged(d, (IAsyncDocument?)e.OldValue, (IAsyncDocument?)e.NewValue)));
+        "Document", typeof(IAsyncDocument), typeof(DocumentServiceBase));
 
     /// <summary>
     /// Identifies the <see cref="FallbackViewType"/> dependency property.
@@ -111,19 +110,6 @@ public abstract class DocumentServiceBase : ViewServiceBase
             command.Execute(e);
     }
 
-    /// <summary>
-    /// Handles changes to the Document attached property.
-    /// </summary>
-    /// <param name="element">The element on which the property was changed.</param>
-    /// <param name="oldDocument">The old value of the Document property.</param>
-    /// <param name="newDocument">The new value of the Document property.</param>
-    private static void OnDocumentChanged(DependencyObject element, IAsyncDocument? oldDocument, IAsyncDocument? newDocument)
-    {
-        var doc = GetDocument(element);
-        Debug.Assert(doc == newDocument);
-        _ = oldDocument;
-    }
-
     #endregion
 
     #region Dependency Methods
@@ -135,6 +121,7 @@ public abstract class DocumentServiceBase : ViewServiceBase
     /// <returns>The current value of the Document attached property.</returns>
     public static IAsyncDocument? GetDocument(DependencyObject element)
     {
+        ArgumentNullException.ThrowIfNull(element);
         return (IAsyncDocument?)element.GetValue(DocumentProperty);
     }
 
@@ -145,6 +132,7 @@ public abstract class DocumentServiceBase : ViewServiceBase
     /// <param name="value">The new value for the Document attached property.</param>
     public static void SetDocument(DependencyObject element, IAsyncDocument? value)
     {
+        ArgumentNullException.ThrowIfNull(element);
         element.SetValue(DocumentProperty, value);
     }
 
@@ -194,10 +182,4 @@ public abstract class DocumentServiceBase : ViewServiceBase
     }
 
     #endregion
-}
-
-internal static partial class EventArgsCache
-{
-    internal static readonly PropertyChangedEventArgs CountPropertyChanged = new(nameof(IAsyncDocumentManagerService.Count));
-    internal static readonly PropertyChangedEventArgs TitlePropertyChanged = new(nameof(IAsyncDocument.Title));
 }

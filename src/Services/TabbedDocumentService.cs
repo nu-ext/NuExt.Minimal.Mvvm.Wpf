@@ -22,7 +22,7 @@ public class TabbedDocumentService : DocumentServiceBase, IAsyncDocumentManagerS
 {
     #region TabbedDocument
 
-    protected sealed class TabbedDocument : AsyncDisposable, IAsyncDocument
+    protected sealed class TabbedDocument : AsyncDisposable, IAsyncDocument, IViewModelProvider
     {
         private readonly AsyncLifetime _lifetime = new AsyncLifetime() { ContinueOnCapturedContext = true }
 #if DEBUG
@@ -36,7 +36,7 @@ public class TabbedDocumentService : DocumentServiceBase, IAsyncDocumentManagerS
             ArgumentNullException.ThrowIfNull(owner);
             TabItem = tabItem ?? throw new ArgumentNullException(nameof(tabItem));
 
-            var viewModel = ViewModelHelper.GetViewModelFromView(TabItem.Content);
+            var viewModel = ViewModel;
             Debug.Assert(viewModel != null);
 
             _lifetime.AddDisposable(_cts);
@@ -65,6 +65,16 @@ public class TabbedDocumentService : DocumentServiceBase, IAsyncDocumentManagerS
                     () => dpd.RemoveValueChanged(TabItem, OnTabHeaderChanged));
             }
             Debug.Assert(dpd != null);
+
+            var viewModelPropertyDescriptor = DependencyPropertyDescriptor.FromProperty(FrameworkElement.DataContextProperty, typeof(FrameworkElement));
+
+            if (viewModelPropertyDescriptor != null)
+            {
+                _lifetime.AddBracket(
+                    () => viewModelPropertyDescriptor.AddValueChanged(TabItem, OnViewModelChanged),
+                    () => viewModelPropertyDescriptor.RemoveValueChanged(TabItem, OnViewModelChanged));
+            }
+            Debug.Assert(viewModelPropertyDescriptor != null);
         }
 
         #region Properties
@@ -87,6 +97,9 @@ public class TabbedDocumentService : DocumentServiceBase, IAsyncDocumentManagerS
             set => TabItem.Header = value;
         }
 
+        /// <inheritdoc/>
+        public object? ViewModel => ViewModelHelper.GetViewModelFromView(TabItem.Content);
+
         public bool IsClosing { get; private set; }
 
         private TabControl? TabControl => TabItem.Parent as TabControl;
@@ -108,6 +121,11 @@ public class TabbedDocumentService : DocumentServiceBase, IAsyncDocumentManagerS
             {
                 element.Visibility = TabItem.Visibility;
             }
+        }
+
+        private void OnViewModelChanged(object? sender, EventArgs e)
+        {
+            OnPropertyChanged(EventArgsCache.ViewModelPropertyChanged);
         }
 
         #endregion
@@ -187,7 +205,7 @@ public class TabbedDocumentService : DocumentServiceBase, IAsyncDocumentManagerS
 
         private ValueTask DisposeViewModelAsync()
         {
-            var viewModel = ViewModelHelper.GetViewModelFromView(TabItem.Content);
+            var viewModel = ViewModel;
             Debug.Assert(viewModel != null);
             if (DisposeOnClose && viewModel is IAsyncDisposable asyncDisposable)
             {
@@ -438,6 +456,7 @@ public class TabbedDocumentService : DocumentServiceBase, IAsyncDocumentManagerS
     {
         try
         {
+            Disposable.DisposeAndNull(ref _subscription);
             await CloseAllAsync().ConfigureAwait(false);
         }
         finally

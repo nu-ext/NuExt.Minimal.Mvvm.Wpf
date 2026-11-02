@@ -24,7 +24,7 @@ public class WindowedDocumentService : DocumentServiceBase, IAsyncDocumentManage
 {
     #region WindowedDocument
 
-    protected class WindowedDocument : AsyncDisposable, IAsyncDocument
+    protected class WindowedDocument : AsyncDisposable, IAsyncDocument, IViewModelProvider
     {
         private readonly AsyncLifetime _lifetime = new AsyncLifetime() { ContinueOnCapturedContext = true }
 #if DEBUG
@@ -38,6 +38,8 @@ public class WindowedDocumentService : DocumentServiceBase, IAsyncDocumentManage
         private bool? _isViewModelDisposed;
         private readonly Action _onTitleChanged;
 
+        private INotifyPropertyChanged? _viewModelNotifier;
+
         internal WindowedDocument(WindowedDocumentService owner, Window window, AsyncLifetime lifetime)
         {
             Owner = owner ?? throw new ArgumentNullException(nameof(owner));
@@ -45,7 +47,7 @@ public class WindowedDocumentService : DocumentServiceBase, IAsyncDocumentManage
 
             Debug.Assert(Window.CheckAccess());
 
-            var viewModel = ViewModelHelper.GetViewModelFromView(Window.Content);
+            var viewModel = ViewModel;
             Debug.Assert(viewModel != null);
 
             _lifetime.AddDisposable(_cts);
@@ -56,12 +58,7 @@ public class WindowedDocumentService : DocumentServiceBase, IAsyncDocumentManage
             _lifetime.Add(() => Window.ClearStyle());//clear window style
             _lifetime.Add(() => owner.ClearAllBindings(Window));//detach vm
             _lifetime.Add(() => ViewModelHelper.DetachContentFromContainer(Window));//detach content
-            if (viewModel is INotifyPropertyChanged notifier)
-            {
-                _lifetime.AddBracket(
-                    () => notifier.PropertyChanged += OnViewModelPropertyChanged,
-                    () => notifier.PropertyChanged -= OnViewModelPropertyChanged);
-            }
+            _lifetime.AddBracket(() => SubscribeViewModel(viewModel), () => SubscribeViewModel(null));
             _lifetime.AddAsync(DisposeViewModelAsync);//dispose vm
 
             _lifetime.AddAsyncDisposable(lifetime);
@@ -82,6 +79,16 @@ public class WindowedDocumentService : DocumentServiceBase, IAsyncDocumentManage
                     () => { lock (LockPool.Get(dpd)) dpd.RemoveValueChanged(Window, OnWindowTitleChanged); });
             }
             Debug.Assert(dpd != null);
+
+            var viewModelPropertyDescriptor = DependencyPropertyDescriptor.FromProperty(FrameworkElement.DataContextProperty, typeof(FrameworkElement));
+
+            if (viewModelPropertyDescriptor != null)
+            {
+                _lifetime.AddBracket(
+                    () => viewModelPropertyDescriptor.AddValueChanged(Window, OnViewModelChanged),
+                    () => viewModelPropertyDescriptor.RemoveValueChanged(Window, OnViewModelChanged));
+            }
+            Debug.Assert(viewModelPropertyDescriptor != null);
 
             Title = Window.Title;
             _onTitleChanged = OnTitleChanged;
@@ -107,6 +114,9 @@ public class WindowedDocumentService : DocumentServiceBase, IAsyncDocumentManage
             set => SetProperty(ref field, value, _onTitleChanged, EventArgsCache.TitlePropertyChanged);
         }
 
+        /// <inheritdoc/>
+        public object? ViewModel => ViewModelHelper.GetViewModelFromView(Window.Content);
+
         private Window Window { get; }
 
         private WindowedDocumentService Owner { get; }
@@ -120,7 +130,7 @@ public class WindowedDocumentService : DocumentServiceBase, IAsyncDocumentManage
         private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             Debug.Assert(sender is IDisposableState);
-            if (sender is not IDisposableState viewModl)
+            if (sender is not IDisposableState viewModel)
             {
                 return;
             }
@@ -128,10 +138,10 @@ public class WindowedDocumentService : DocumentServiceBase, IAsyncDocumentManage
             switch (e.PropertyName)
             {
                 case nameof(IDisposableState.IsDisposing):
-                    _isViewModelDisposing = viewModl.IsDisposing;
+                    _isViewModelDisposing = viewModel.IsDisposing;
                     break;
                 case nameof(IDisposableState.IsDisposed):
-                    _isViewModelDisposed = viewModl.IsDisposed;
+                    _isViewModelDisposed = viewModel.IsDisposed;
                     break;
             }
         }
@@ -160,7 +170,7 @@ public class WindowedDocumentService : DocumentServiceBase, IAsyncDocumentManage
         {
             Debug.Assert(!document._isClosing);
 
-            var viewModel = ViewModelHelper.GetViewModelFromView(document.Window.Content);
+            var viewModel = document.ViewModel;
             Debug.Assert(viewModel != null);
 
             if (document.HideInsteadOfClose)
@@ -204,9 +214,39 @@ public class WindowedDocumentService : DocumentServiceBase, IAsyncDocumentManage
             }
         }
 
+        private void OnViewModelChanged(object? sender, EventArgs e)
+        {
+            SubscribeViewModel(ViewModel);
+            OnPropertyChanged(EventArgsCache.ViewModelPropertyChanged);
+        }
+
         #endregion
 
         #region Methods
+
+        private void SubscribeViewModel(object? viewModel)
+        {
+            if (_viewModelNotifier != null)
+            {
+                _viewModelNotifier.PropertyChanged -= OnViewModelPropertyChanged;
+            }
+
+            _isViewModelDisposing = null;
+            _isViewModelDisposed = null;
+
+            if (viewModel is IDisposableState disposableState and INotifyPropertyChanged notifier)
+            {
+                _viewModelNotifier = notifier;
+                _viewModelNotifier.PropertyChanged += OnViewModelPropertyChanged;
+
+                _isViewModelDisposing = disposableState.IsDisposing;
+                _isViewModelDisposed = disposableState.IsDisposed;
+            }
+            else
+            {
+                _viewModelNotifier = null;
+            }
+        }
 
         /// <inheritdoc/>
         public ValueTask CloseAsync(bool force)
@@ -295,7 +335,7 @@ public class WindowedDocumentService : DocumentServiceBase, IAsyncDocumentManage
                 Debug.Assert(_isViewModelDisposed == true);
                 return ValueTask.CompletedTask;
             }
-            var viewModel = ViewModelHelper.GetViewModelFromView(Window.Content);
+            var viewModel = ViewModel;
             Debug.Assert(viewModel != null);
             if (DisposeOnClose && viewModel is IAsyncDisposable asyncDisposable)
             {

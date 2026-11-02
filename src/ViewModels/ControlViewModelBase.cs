@@ -64,6 +64,8 @@ public partial class ControlViewModelBase : CommandViewModelBase, IControlViewMo
         Lifetime.AddBracket(CreateCommands, NullifyCommands);//operation after WaitAsyncCommands
         Lifetime.AddAsync(() => WaitAsyncCommands());
 
+        // Keep this handler subscribed until the final disposal state notifications are raised.
+        // RaisePropertiesChangedAndClearHandlers removes it together with the remaining handlers.
         PropertyChanged += OnPropertyChanged;
     }
 
@@ -139,25 +141,29 @@ public partial class ControlViewModelBase : CommandViewModelBase, IControlViewMo
 
     #region Event Handlers
 
-    private ValueTask OnDisposing(object? sender, EventArgs e, CancellationToken cancellationToken)
+    private static ValueTask OnDisposing(object? sender, EventArgs e, CancellationToken cancellationToken)
     {
-        CancelAsyncCommands();
+        Debug.Assert(sender is ControlViewModelBase);
+        var viewModel = (ControlViewModelBase)sender!;
+
+        viewModel.CancelAsyncCommands();
         return ValueTask.CompletedTask;
     }
 
-    private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    private static void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        Debug.Assert(ReferenceEquals(sender, this));
+        Debug.Assert(sender is ControlViewModelBase);
+        var viewModel = (ControlViewModelBase)sender!;
 
         switch (e.PropertyName)
         {
             case nameof(IsInitialized):
             case nameof(IsDisposed):
             case nameof(IsDisposing):
-                OnPropertyChanged(EventArgsCache.IsUsablePropertyChanged);
+                viewModel.OnPropertyChanged(EventArgsCache.IsUsablePropertyChanged);
                 break;
             case nameof(IsUsable):
-                RaiseCanExecuteChanged();
+                viewModel.RaiseCanExecuteChanged();
                 break;
         }
     }

@@ -41,6 +41,8 @@ public partial class WindowViewModelBase : ControlViewModelBase, IWindowViewMode
             return;
         }
 
+        // Keep this handler subscribed until the final disposal state notifications are raised.
+        // RaisePropertiesChangedAndClearHandlers removes it together with the remaining handlers.
         PropertyChanged += OnPropertyChanged;
     }
 
@@ -155,18 +157,21 @@ public partial class WindowViewModelBase : ControlViewModelBase, IWindowViewMode
         }
     }
 
-    private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    private static void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(IsDisposed) && IsDisposed)
+        Debug.Assert(sender is WindowViewModelBase);
+        var vm = (WindowViewModelBase)sender!;
+
+        if (e.PropertyName == nameof(IsDisposed) && vm.IsDisposed)
         {
 #if TRACE_LIFETIME
-            Trace.WriteLine($"{GetType().FullName} ({DisplayName ?? "Unnamed"}) ({RuntimeHelpers.GetHashCode(this):X8}) is closing");
+            Trace.WriteLine($"{vm.GetType().FullName} ({vm.DisplayName ?? "Unnamed"}) ({RuntimeHelpers.GetHashCode(vm):X8}) is closing");
 #endif
-            Close();
+            vm.Close();
 #if TRACE_LIFETIME
-            Trace.WriteLine($"{GetType().FullName} ({DisplayName ?? "Unnamed"}) ({RuntimeHelpers.GetHashCode(this):X8}) is closed");
+            Trace.WriteLine($"{vm.GetType().FullName} ({vm.DisplayName ?? "Unnamed"}) ({RuntimeHelpers.GetHashCode(vm):X8}) is closed");
 #endif
-            _cts.Dispose();
+            vm._cts.Dispose();
         }
     }
 
