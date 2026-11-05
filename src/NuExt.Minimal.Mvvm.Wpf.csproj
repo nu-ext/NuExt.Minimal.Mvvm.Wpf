@@ -9,7 +9,7 @@
     <RootNamespace>Minimal.Mvvm.Wpf</RootNamespace>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591;NETSDK1233</NoWarn>
-    <VersionPrefix>0.8.5</VersionPrefix>
+    <VersionPrefix>0.8.6</VersionPrefix>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,7 +24,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NuExt.Presentation.Wpf" Version="0.8.1" />
+    <PackageReference Include="NuExt.Presentation.Wpf" Version="0.8.2" />
     <PackageReference Include="NuExt.System" Version="0.8.2" />
   </ItemGroup>
 
