@@ -5,13 +5,11 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 
-using static Minimal.Mvvm.AccessModifier;
-
 namespace Minimal.Mvvm.Wpf;
 
 partial class ControlViewModelBase
 {
-    // Command Methods
+    // Commands
 
     /// <summary>
     /// Command executed when the view is loaded.
@@ -22,11 +20,8 @@ partial class ControlViewModelBase
     /// &lt;nx:EventToCommand EventName="Loaded" Command="{Binding LoadedCommand}" /&gt;
     /// </code>
     /// </remarks>
-    [Command(Setter = Private)]
-    private void Loaded()
-    {
-        OnLoaded();
-    }
+    [Notify]
+    public partial IRelayCommand? LoadedCommand { get; private set; }
 
     /// <summary>
     /// Command executed when the view is unloaded.
@@ -37,13 +32,10 @@ partial class ControlViewModelBase
     /// &lt;nx:EventToCommand EventName="Unloaded" Command="{Binding UnloadedCommand}" /&gt;
     /// </code>
     /// </remarks>
-    [Command(Setter = Private)]
-    private void Unloaded()
-    {
-        OnUnloaded();
-    }
+    [Notify]
+    public partial IRelayCommand? UnloadedCommand { get; private set; }
 
-    // Methods
+    // Command Methods
 
     /// <summary>
     /// Method to be called when the view is loaded.
@@ -75,5 +67,79 @@ partial class ControlViewModelBase
 #if TRACE_EVENTS
         Trace.WriteLine($"{GetType().FullName} ({DisplayName ?? "Unnamed"}) ({RuntimeHelpers.GetHashCode(this):X8})::OnUnloaded");
 #endif
+    }
+
+    // Methods
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// When inheriting from this class, you should override this method to create commands defined in your ViewModel.
+    /// Ensure to call the base implementation to include commands from the base class.
+    /// </remarks>
+    protected override void CreateCommands()
+    {
+        LoadedCommand = new RelayCommand(OnLoaded);
+        UnloadedCommand = new RelayCommand(OnUnloaded);
+    }
+
+    /// <inheritdoc/>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="callerName"/> is null or empty, or command not found.</exception>
+    /// <remarks>
+    /// This method uses the <see cref="CallerMemberNameAttribute"/> to determine the name of the calling method automatically,
+    /// making it easier to retrieve the appropriate command without explicitly passing the method name.
+    /// When inheriting from this class, you should override this method to handle commands defined in your ViewModel.
+    /// Ensure to call the base implementation to handle commands from the base class.
+    /// This method is intended to be called from within a command method to obtain the associated command instance.
+    /// </remarks>
+    protected override ICommand? GetCurrentCommand([CallerMemberName] string? callerName = null)
+    {
+        Debug.Assert(!string.IsNullOrEmpty(callerName), $"{nameof(callerName)} is null or empty");
+        ArgumentException.ThrowIfNullOrEmpty(callerName);
+        return callerName switch
+        {
+            nameof(OnLoaded) => LoadedCommand,
+            nameof(OnUnloaded) => UnloadedCommand,
+            _ => throw new ArgumentException($"Command for method '{callerName}' was not found.", nameof(callerName))
+        };
+    }
+
+    /// <inheritdoc/>
+    protected override string GetCommandMethodName(ICommand command)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+
+        if (ReferenceEquals(command, LoadedCommand))
+        {
+            return nameof(OnLoaded);
+        }
+        if (ReferenceEquals(command, UnloadedCommand))
+        {
+            return nameof(OnUnloaded);
+        }
+
+        throw new ArgumentException($"Method for command '{command.GetType().FullName}' was not found.", nameof(command));
+    }
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// When inheriting from this class, you should override this method to add commands that are defined in your ViewModel.
+    /// Ensure to call the base implementation to include commands from the base class.
+    /// Note: Do not reassign the builder parameter within this method. Instead, use the provided builder to add commands.
+    /// </remarks>
+    protected override void GetAllCommands(ref ValueListBuilder<(string PropertyName, ICommand? Command)> builder)
+    {
+        builder.Append((nameof(LoadedCommand), LoadedCommand));
+        builder.Append((nameof(UnloadedCommand), UnloadedCommand));
+    }
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// When inheriting from this class, you should override this method to nullify commands defined in your ViewModel.
+    /// Ensure to call the base implementation to nullify commands from the base class.
+    /// </remarks>
+    protected override void NullifyCommands()
+    {
+        LoadedCommand = null;
+        UnloadedCommand = null;
     }
 }
