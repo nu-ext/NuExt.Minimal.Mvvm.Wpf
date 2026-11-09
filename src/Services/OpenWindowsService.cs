@@ -15,6 +15,7 @@ namespace Minimal.Mvvm.Wpf;
 public sealed class OpenWindowsService : AsyncDisposable, IOpenWindowsService
 {
     private readonly List<IWindowViewModel> _viewModels = [];
+    private int _count;
     private readonly AsyncLock _lock = new AsyncLock()
 #if DEBUG
         .SetDebugInfo()
@@ -27,23 +28,7 @@ public sealed class OpenWindowsService : AsyncDisposable, IOpenWindowsService
     }
 
     /// <inheritdoc/>
-    public int Count
-    {
-        get
-        {
-            CheckDisposingOrDisposed();
-
-            _lock.Enter();
-            try
-            {
-                return _viewModels.Count;
-            }
-            finally
-            {
-                _lock.Exit();
-            }
-        }
-    }
+    public int Count => Volatile.Read(ref _count);
 
     /// <inheritdoc/>
     public IEnumerable<IWindowViewModel> ViewModels
@@ -85,6 +70,7 @@ public sealed class OpenWindowsService : AsyncDisposable, IOpenWindowsService
             {
                 _viewModels.Add(viewModel);
                 added = true;
+                Volatile.Write(ref _count, _viewModels.Count);
             }
         }
         finally
@@ -126,6 +112,10 @@ public sealed class OpenWindowsService : AsyncDisposable, IOpenWindowsService
                 Trace.WriteLine(message);
                 Debug.Fail(message);
             }
+            else
+            {
+                Volatile.Write(ref _count, _viewModels.Count);
+            }
         }
         finally
         {
@@ -150,6 +140,7 @@ public sealed class OpenWindowsService : AsyncDisposable, IOpenWindowsService
 
         List<Exception>? exceptions = null;
         await _lock.EnterAsync();
+        bool raiseCountChanged = _viewModels.Count > 0;
         try
         {
             for (int i = _viewModels.Count - 1; i >= 0; i--)
@@ -166,6 +157,7 @@ public sealed class OpenWindowsService : AsyncDisposable, IOpenWindowsService
             }
             //Debug.Assert(_viewModels.Count == 0);
             _viewModels.Clear();
+            Volatile.Write(ref _count, _viewModels.Count);
         }
         finally
         {
@@ -173,7 +165,10 @@ public sealed class OpenWindowsService : AsyncDisposable, IOpenWindowsService
             _lock.Dispose();
         }
 
-        OnPropertyChanged(EventArgsCache.CountPropertyChanged);
+        if (raiseCountChanged)
+        {
+            OnPropertyChanged(EventArgsCache.CountPropertyChanged);
+        }
 
         if (exceptions is not null)
         {

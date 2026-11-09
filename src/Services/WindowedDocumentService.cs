@@ -75,8 +75,8 @@ public class WindowedDocumentService : DocumentServiceBase, IAsyncDocumentManage
             {
                 //lock to avoid ThrowInvalidOperationException_ConcurrentOperationsNotSupported
                 _lifetime.AddBracket(
-                    () => { lock (LockPool.Get(dpd)) dpd.AddValueChanged(Window, OnWindowTitleChanged); },
-                    () => { lock (LockPool.Get(dpd)) dpd.RemoveValueChanged(Window, OnWindowTitleChanged); });
+                    () => { lock (Owner._syncRoot) dpd.AddValueChanged(Window, OnWindowTitleChanged); },
+                    () => { lock (Owner._syncRoot) dpd.RemoveValueChanged(Window, OnWindowTitleChanged); });
             }
             Debug.Assert(dpd != null);
 
@@ -175,7 +175,7 @@ public class WindowedDocumentService : DocumentServiceBase, IAsyncDocumentManage
 
             if (document.HideInsteadOfClose)
             {
-                if (await CanCloseAsync(document.Window, cancellationToken) == false)
+                if (!document.IsViewModeDisposingOrDisposed && await CanCloseAsync(document.Window, cancellationToken) == false)
                 {
                     return;
                 }
@@ -291,7 +291,7 @@ public class WindowedDocumentService : DocumentServiceBase, IAsyncDocumentManage
                 }
                 else
                 {
-                    if (await CanCloseAsync(Window, CancellationToken) == false)
+                    if (!IsViewModeDisposingOrDisposed && await CanCloseAsync(Window, CancellationToken) == false)
                     {
                         return;
                     }
@@ -402,6 +402,7 @@ public class WindowedDocumentService : DocumentServiceBase, IAsyncDocumentManage
 
     #endregion
 
+    private readonly Lock _syncRoot = new();
     private readonly ObservableCollection<IAsyncDocument> _documents = [];
     private bool _isActiveDocumentChanging;
 

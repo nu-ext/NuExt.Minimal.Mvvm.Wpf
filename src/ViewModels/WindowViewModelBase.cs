@@ -186,7 +186,7 @@ public partial class WindowViewModelBase : ControlViewModelBase, IWindowViewMode
         _cts.Cancel();
 #endif
         Hide();
-        await base.DisposeAsyncCore();
+        await base.DisposeAsyncCore().ConfigureAwait(false);
     }
 
     /// <inheritdoc/>
