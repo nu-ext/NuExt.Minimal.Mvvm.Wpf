@@ -23,6 +23,8 @@ namespace Minimal.Mvvm.Wpf;
 /// </remarks>
 public abstract class CommandViewModelBase : ViewModelBase, ICommandViewModel
 {
+    private bool _commandsCreated;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="CommandViewModelBase"/> class.
     /// </summary>
@@ -49,7 +51,7 @@ public abstract class CommandViewModelBase : ViewModelBase, ICommandViewModel
         // creation synchronous and preserve the caller's synchronization context.
         if (cancellationToken.IsCancellationRequested) return Task.FromCanceled(cancellationToken);
 
-        CreateCommands();
+        InternalCreateCommands();
         return Task.CompletedTask;
     }
 
@@ -61,8 +63,36 @@ public abstract class CommandViewModelBase : ViewModelBase, ICommandViewModel
             return Task.FromCanceled(cancellationToken);
         }
 
-        NullifyCommands();
+        InternalNullifyCommands();
         return base.UninitializeAsyncCore(cancellationToken);
+    }
+
+    /// <summary>
+    /// Creates commands unless they have already been created.
+    /// </summary>
+    private protected void InternalCreateCommands()
+    {
+        if (_commandsCreated)
+        {
+            return;
+        }
+
+        CreateCommands();
+        _commandsCreated = true;
+    }
+
+    /// <summary>
+    /// Nullifies commands if they have been created.
+    /// </summary>
+    private protected void InternalNullifyCommands()
+    {
+        if (!_commandsCreated)
+        {
+            return;
+        }
+
+        NullifyCommands();
+        _commandsCreated = false;
     }
 
     /// <inheritdoc/>
@@ -103,6 +133,15 @@ public abstract class CommandViewModelBase : ViewModelBase, ICommandViewModel
     /// if the command has not been created or has already been released.
     /// </returns>
     protected abstract ICommand? GetCurrentCommand([CallerMemberName] string? callerName = null);
+
+    /// <summary>
+    /// Retrieves the name of the ViewModel method associated with the specified command.
+    /// </summary>
+    /// <param name="command">The command whose associated method name should be retrieved.</param>
+    /// <returns>The name of the ViewModel method associated with <paramref name="command"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="command"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">Thrown when the command is not associated with a ViewModel method.</exception>
+    protected abstract string GetCommandMethodName(ICommand command);
 
     /// <summary>
     /// Retrieves all commands recursively from the current ViewModel and its base classes, adding them to the provided list.

@@ -10,7 +10,7 @@ namespace Minimal.Mvvm.Wpf;
 
 partial class WindowViewModelBase
 {
-    #region Command Methods
+    // Command Methods
 
     /// <summary>
     /// Gets or sets the command that is executed when the content is rendered.
@@ -137,9 +137,7 @@ partial class WindowViewModelBase
         OnPlacementSaved();
     }
 
-    #endregion
-
-    #region Methods
+    // Methods
 
     /// <summary>
     /// Called when the content of the window is rendered.
@@ -178,6 +176,4 @@ partial class WindowViewModelBase
     {
 
     }
-
-    #endregion
 }

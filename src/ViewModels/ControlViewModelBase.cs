@@ -14,6 +14,7 @@ namespace Minimal.Mvvm.Wpf;
 /// Base class for ViewModels associated with UI controls, providing control lifecycle,
 /// thread synchronization, asynchronous disposal, and command management support.
 /// </summary>
+[GenerateCommands]
 public partial class ControlViewModelBase : CommandViewModelBase, IControlViewModel
 {
 #if NET9_0_OR_GREATER
@@ -61,7 +62,7 @@ public partial class ControlViewModelBase : CommandViewModelBase, IControlViewMo
         }
 
         Lifetime.AddBracket(() => Disposing += OnDisposing, () => Disposing -= OnDisposing);
-        Lifetime.AddBracket(CreateCommands, NullifyCommands);//operation after WaitAsyncCommands
+        Lifetime.AddBracket(InternalCreateCommands, InternalNullifyCommands);//operation after WaitAsyncCommands
         Lifetime.AddAsync(() => WaitAsyncCommands());
 
         // Keep this handler subscribed until the final disposal state notifications are raised.
