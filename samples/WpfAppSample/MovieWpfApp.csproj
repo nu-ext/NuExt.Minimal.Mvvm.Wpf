@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFrameworks>net10.0-windows;net9.0-windows;net8.0-windows;net48;net462</TargetFrameworks>
+    <TargetFrameworks>net11.0-windows;net10.0-windows;net9.0-windows;net8.0-windows;net48;net462</TargetFrameworks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
@@ -13,9 +13,10 @@
   <ItemGroup>
     <PackageReference Include="ControlzEx" Version="7.0.4" />
     <PackageReference Include="MahApps.Metro.IconPacks.Material" Version="6.2.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.14" />
-    <PackageReference Include="NLog.Extensions.Logging" Version="6.2.2" />
-    <PackageReference Condition="'$(NuExt_UseLocalProjects)' != 'true'" Include="NuExt.Minimal.Mvvm.SourceGenerator" Version="0.9.0">
+    <PackageReference Condition="'$(TargetFramework)' != 'net11.0-windows' and '$(TargetFramework)' != 'net10.0-windows'" Include="Microsoft.Extensions.Configuration.Json" Version="10.0.15" />
+    <PackageReference Condition="'$(TargetFramework)' == 'net11.0-windows' or '$(TargetFramework)' == 'net10.0-windows'" Include="Microsoft.Extensions.Configuration.Json" Version="11.0.0" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="6.3.0" />
+    <PackageReference Condition="'$(NuExt_UseLocalProjects)' != 'true'" Include="NuExt.Minimal.Mvvm.SourceGenerator" Version="0.9.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

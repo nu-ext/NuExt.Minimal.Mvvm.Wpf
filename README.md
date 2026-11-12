@@ -69,7 +69,7 @@ Cleanup releases the owned ViewModel, bindings, subscriptions, and UI host
 
 ## Compatibility
 
-- **WPF on .NET 8/9/10 and .NET Framework 4.6.2+**
+- **WPF on .NET 8/9/10/11 and .NET Framework 4.6.2+**
 
 ## Key concepts
 
