@@ -2,6 +2,7 @@
   <!-- Project properties -->
   <PropertyGroup>
     <LangVersion>14</LangVersion>
+    <AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
   </PropertyGroup>
 
   <!-- Imports -->

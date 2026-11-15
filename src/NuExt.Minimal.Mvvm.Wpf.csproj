@@ -20,7 +20,7 @@
   <ItemGroup Condition="'$(NuExt_UseLocalProjects)' != 'true'">
     <PackageReference Include="NuExt.Minimal.Mvvm" Version="0.9.1" />
     <PackageReference Include="NuExt.Minimal.Behaviors.Wpf" Version="0.9.1" />
-    <PackageReference Include="NuExt.Minimal.Mvvm.SourceGenerator" Version="0.9.1">
+    <PackageReference Include="NuExt.Minimal.Mvvm.SourceGenerator" Version="0.9.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
