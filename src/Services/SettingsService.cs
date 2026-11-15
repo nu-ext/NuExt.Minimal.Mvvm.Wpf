@@ -52,14 +52,14 @@ public class SettingsService : ServiceBase<FrameworkElement>, ISettingsService
 
     #region Methods
 
-    /// <inheritdoc />
-    protected override void OnAttached()
+    private string GetPrefix()
     {
-        base.OnAttached();
-        if (string.IsNullOrWhiteSpace(Prefix))
+        var prefix = Prefix;
+        if (string.IsNullOrWhiteSpace(prefix))
         {
-            Prefix = AssociatedObject!.GetType().Name;
+            prefix = AssociatedObject!.GetType().Name;
         }
+        return prefix!;
     }
 
     /// <summary>
@@ -67,21 +67,26 @@ public class SettingsService : ServiceBase<FrameworkElement>, ISettingsService
     /// </summary>
     /// <param name="name">The base name of the settings file.</param>
     /// <returns>The constructed filename.</returns>
+    /// <exception cref="ArgumentException">Thrown when the name is null or empty.</exception>
     private string GetFileName(string name)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
+
+        var prefix = GetPrefix();
+
         var sb = new ValueStringBuilder(260);
-        if (!string.IsNullOrEmpty(Prefix))
+        if (!string.IsNullOrWhiteSpace(prefix))
         {
-            sb.Append(Prefix);
-            if (!Prefix!.EndsWith('.'))
+            sb.Append(prefix);
+            if (!prefix!.EndsWith('.'))
             {
                 sb.Append('.');
             }
         }
         sb.Append(name);
         string fileName = sb.ToString();
-        if (Path.HasExtension(name)) return IOUtils.SanitizeFileName(fileName)!;
+
+        if (string.Equals(Path.GetExtension(fileName), ".json", StringComparison.OrdinalIgnoreCase)) return IOUtils.SanitizeFileName(fileName);
         return IOUtils.SanitizeFileName(fileName) + ".json";
     }
 
@@ -94,6 +99,8 @@ public class SettingsService : ServiceBase<FrameworkElement>, ISettingsService
     /// <returns>true if the settings were loaded successfully; otherwise, false.</returns>
     public bool LoadSettings(SettingsBase settings, string name = "Settings", JsonSerializerOptions? options = null)
     {
+        if (!IsEnabled) return false;
+
         Debug.Assert(settings != null, "settings is null");
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentException.ThrowIfNullOrEmpty(name);
@@ -143,6 +150,8 @@ public class SettingsService : ServiceBase<FrameworkElement>, ISettingsService
     /// <returns>true if the settings were saved successfully; otherwise, false.</returns>
     public bool SaveSettings(SettingsBase settings, string name = "Settings", JsonSerializerOptions? options = null)
     {
+        if (!IsEnabled) return false;
+
         Debug.Assert(settings != null, "settings is null");
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentException.ThrowIfNullOrEmpty(name);

@@ -97,11 +97,13 @@ public class WindowPlacementService : WindowServiceBase, IWindowPlacementService
     protected override void OnWindowChanged(Window? oldWindow, Window? newWindow)
     {
         base.OnWindowChanged(oldWindow, newWindow);
+
         if (oldWindow != null)
         {
             oldWindow.Closing -= OnClosing;
             oldWindow.SourceInitialized -= OnSourceInitialized;
         }
+
         if (newWindow != null)
         {
             newWindow.SourceInitialized += OnSourceInitialized;
@@ -120,7 +122,9 @@ public class WindowPlacementService : WindowServiceBase, IWindowPlacementService
         var window = sender as Window;
         Debug.Assert(window != null, "Window is null");
         window!.SourceInitialized -= OnSourceInitialized;
-        if (IsEnabled == false) return;
+
+        if (!IsEnabled) return;
+
         try
         {
             var path = FilePath;
@@ -148,6 +152,7 @@ public class WindowPlacementService : WindowServiceBase, IWindowPlacementService
         {
             return;
         }
+
         Debug.Assert(Equals(sender, Window), $"{nameof(Window)} is not equal sender");
         var window = sender as Window;
         Debug.Assert(window != null, "Window is null");
@@ -158,6 +163,7 @@ public class WindowPlacementService : WindowServiceBase, IWindowPlacementService
     private void OnPlacementRestored(object? sender, EventArgs e)
     {
         Restored?.Invoke(sender, e);
+
         var placementRestoredCommand = PlacementRestoredCommand;
         if (placementRestoredCommand != null && placementRestoredCommand.CanExecute(e))
         {
@@ -168,6 +174,7 @@ public class WindowPlacementService : WindowServiceBase, IWindowPlacementService
     private void OnPlacementSaved(object? sender, EventArgs e)
     {
         Saved?.Invoke(sender, e);
+
         var placementSavedCommand = PlacementSavedCommand;
         if (placementSavedCommand != null && placementSavedCommand.CanExecute(e))
         {
@@ -184,15 +191,17 @@ public class WindowPlacementService : WindowServiceBase, IWindowPlacementService
         var fileName = FileName;
         if (string.IsNullOrWhiteSpace(fileName))
         {
-            fileName = $"{AssociatedObject!.GetType().Name}";
+            fileName = AssociatedObject!.GetType().Name;
         }
-        if (Path.HasExtension(fileName)) return IOUtils.SanitizeFileName(fileName)!;
+
+        if (string.Equals(Path.GetExtension(fileName), ".json", StringComparison.OrdinalIgnoreCase)) return IOUtils.SanitizeFileName(fileName);
         return IOUtils.SanitizeFileName(fileName) + ".json";
     }
 
     private void InternalSavePlacement(Window? window)
     {
-        if (IsEnabled == false) return;
+        if (!IsEnabled) return;
+
         try
         {
             var s = window?.GetPlacementAsJson();

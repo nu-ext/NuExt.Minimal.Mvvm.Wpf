@@ -24,9 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\NuExt.Minimal.Mvvm.Wpf.csproj" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(NuExt_UseLocalProjects)' == 'true'">
-    <ProjectReference Include="..\..\..\NuExt.Minimal.Mvvm.SourceGenerator\src\NuExt.Minimal.Mvvm.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Condition="'$(NuExt_UseLocalProjects)' == 'true'" Include="..\..\..\NuExt.Minimal.Mvvm.SourceGenerator\src\NuExt.Minimal.Mvvm.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>
