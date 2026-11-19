@@ -16,7 +16,8 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />
-    <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.1" />
+    <PackageReference Condition="'$(TargetFramework)' != 'net11.0-windows' and '$(TargetFramework)' != 'net10.0-windows'" Include="Serilog.Settings.Configuration" Version="10.0.1" />
+    <PackageReference Condition="'$(TargetFramework)' == 'net11.0-windows' or '$(TargetFramework)' == 'net10.0-windows'" Include="Serilog.Settings.Configuration" Version="11.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
   </ItemGroup>
 
