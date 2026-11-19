@@ -21,6 +21,30 @@ public partial class MenuItemViewModel : BindableBase
     private object? _commandParameter;
 
     /// <summary>
+    /// Gets or sets the command invoked when the submenu is opened.
+    /// </summary>
+    [Notify]
+    private ICommand? _submenuOpenedCommand;
+
+    /// <summary>
+    /// Gets or sets the command invoked when the submenu is closed.
+    /// </summary>
+    [Notify]
+    private ICommand? _submenuClosedCommand;
+
+    /// <summary>
+    /// Gets or sets the command invoked when the item becomes checked.
+    /// </summary>
+    [Notify]
+    private ICommand? _checkedCommand;
+
+    /// <summary>
+    /// Gets or sets the command invoked when the item becomes unchecked.
+    /// </summary>
+    [Notify]
+    private ICommand? _uncheckedCommand;
+
+    /// <summary>
     /// Gets or sets the header displayed by the menu item.
     /// </summary>
     [Notify]
@@ -61,6 +85,12 @@ public partial class MenuItemViewModel : BindableBase
     /// </summary>
     [Notify]
     private bool _staysOpenOnClick;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the submenu is open.
+    /// </summary>
+    [Notify]
+    private bool _isSubmenuOpen;
 
     /// <summary>
     /// Gets or sets the submenu items.

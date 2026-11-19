@@ -2,11 +2,12 @@
                     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                    xmlns:nx="clr-namespace:Minimal.Mvvm.Wpf"
+                    xmlns:wpf="clr-namespace:Minimal.Mvvm.Wpf"
+                    xmlns:nx="http://schemas.nuext.minimal/xaml"
                     mc:Ignorable="d">
 
   <!-- ToolBar item templates -->
-  <DataTemplate x:Key="Templates.ToolBarItem.Default" DataType="{x:Type nx:ToolBarItemViewModel}">
+  <DataTemplate x:Key="Templates.ToolBarItem.Default" DataType="{x:Type wpf:ToolBarItemViewModel}">
     <Button Style="{DynamicResource {x:Static ToolBar.ButtonStyleKey}}"
             CommandParameter="{Binding CommandParameter}"
             Command="{Binding Command}"
@@ -29,6 +30,47 @@
     </DataTemplate.Triggers>
   </DataTemplate>
 
+  <!-- Toggle toolbar item template -->
+  <DataTemplate x:Key="Templates.ToolBarItem.Toggle" DataType="{x:Type wpf:ToolBarItemViewModel}">
+    <ToggleButton Style="{DynamicResource {x:Static ToolBar.ToggleButtonStyleKey}}"
+                  CommandParameter="{Binding CommandParameter}"
+                  Command="{Binding Command}"
+                  IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                  IsThreeState="{Binding IsThreeState}"
+                  IsEnabled="{Binding IsEnabled}"
+                  ToolTip="{Binding ToolTip}"
+                  ToolBar.OverflowMode="{Binding OverflowMode}">
+      <StackPanel Orientation="Horizontal">
+        <ContentPresenter x:Name="IconPresenter" Content="{Binding Icon}" VerticalAlignment="Center" />
+        <ContentPresenter x:Name="HeaderPresenter" Margin="6,0,0,0" VerticalAlignment="Center" Content="{Binding Header}" />
+      </StackPanel>
+    </ToggleButton>
+    <DataTemplate.Triggers>
+      <DataTrigger Binding="{Binding Icon}" Value="{x:Null}">
+        <Setter TargetName="IconPresenter" Property="Visibility" Value="Collapsed" />
+        <Setter TargetName="HeaderPresenter" Property="Margin" Value="0" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding Header}" Value="{x:Null}">
+        <Setter TargetName="HeaderPresenter" Property="Visibility" Value="Collapsed" />
+      </DataTrigger>
+    </DataTemplate.Triggers>
+  </DataTemplate>
+
+  <!-- Checked/unchecked/indeterminate event behaviors for toggle toolbar items -->
+  <DataTemplate x:Key="Behaviors.ToolBarItem.Toggle" DataType="{x:Type wpf:ToolBarItemViewModel}">
+    <ItemsControl>
+      <nx:EventToCommand Event="{x:Static ToggleButton.CheckedEvent}"
+                         Command="{Binding CheckedCommand}"
+                         CommandParameter="{Binding CommandParameter}" />
+      <nx:EventToCommand Event="{x:Static ToggleButton.UncheckedEvent}"
+                         Command="{Binding UncheckedCommand}"
+                         CommandParameter="{Binding CommandParameter}" />
+      <nx:EventToCommand Event="{x:Static ToggleButton.IndeterminateEvent}"
+                         Command="{Binding IndeterminateCommand}"
+                         CommandParameter="{Binding CommandParameter}" />
+    </ItemsControl>
+  </DataTemplate>
+
   <DataTemplate x:Key="Templates.ToolBarItem.Separator">
     <Separator Style="{DynamicResource {x:Static ToolBar.SeparatorStyleKey}}" />
   </DataTemplate>
@@ -36,13 +78,29 @@
   <!-- ToolBar item style -->
   <Style x:Key="Styles.ToolBarItem.Default" TargetType="{x:Type ContentPresenter}">
     <d:Style.DataContext>
-      <x:Type Type="nx:ToolBarItemViewModel" />
+      <x:Type Type="wpf:ToolBarItemViewModel" />
     </d:Style.DataContext>
     <Setter Property="ContentTemplate" Value="{StaticResource Templates.ToolBarItem.Default}" />
     <Style.Triggers>
       <Trigger Property="Content" Value="{x:Null}">
         <Setter Property="ContentTemplate" Value="{StaticResource Templates.ToolBarItem.Separator}" />
       </Trigger>
+    </Style.Triggers>
+  </Style>
+
+  <!-- ToolBar item style for toggle buttons -->
+  <Style x:Key="Styles.ToolBarItem.Toggle" BasedOn="{StaticResource Styles.ToolBarItem.Default}" TargetType="{x:Type ContentPresenter}">
+    <Setter Property="ContentTemplate" Value="{StaticResource Templates.ToolBarItem.Toggle}" />
+  </Style>
+
+  <!-- ToolBar item style for toggle buttons with checked/unchecked/indeterminate event behaviors -->
+  <Style x:Key="Styles.ToolBarItem.Toggle.Interactive" BasedOn="{StaticResource Styles.ToolBarItem.Toggle}" TargetType="{x:Type ContentPresenter}">
+    <Setter Property="nx:Interaction.BehaviorsTemplate" Value="{StaticResource Behaviors.ToolBarItem.Toggle}" />
+    <Style.Triggers>
+      <!-- Separator placeholders have no view model, so do not attach event behaviors to them -->
+      <DataTrigger Binding="{Binding}" Value="{x:Null}">
+        <Setter Property="nx:Interaction.BehaviorsTemplate" Value="{x:Null}" />
+      </DataTrigger>
     </Style.Triggers>
   </Style>
 
