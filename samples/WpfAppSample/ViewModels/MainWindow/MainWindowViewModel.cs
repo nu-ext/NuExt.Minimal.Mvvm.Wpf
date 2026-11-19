@@ -27,6 +27,11 @@ internal sealed partial class MainWindowViewModel : WindowViewModelBase
 
     public ObservableCollection<MenuItemViewModel> MenuItems { get; } = [];
 
+    /// <summary>
+    /// Gets the mixed toolbar items used to demonstrate toolbar item style selection.
+    /// </summary>
+    public ObservableCollection<ToolBarItemViewModel?> ToolBarItems { get; } = [];
+
     #endregion
 
     #region Services
@@ -146,6 +151,11 @@ internal sealed partial class MainWindowViewModel : WindowViewModelBase
             }
         };
         menuItems.ForEach(MenuItems.Add);
+
+        ToolBarItems.Clear();
+        ToolBarItems.Add(new ToolBarItemViewModel { Header = Loc.Movies, Command = ShowMoviesCommand });
+        ToolBarItems.Add(null);
+        ToolBarItems.Add(new ToggleToolBarItemViewModel { Header = Loc.Show_Active_Document, IsChecked = true });
         return default;
     }
 

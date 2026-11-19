@@ -13,6 +13,12 @@
         ResizeMode="CanResizeWithGrip"
         WindowStartupLocation="CenterScreen"
         Title="{Binding Title, TargetNullValue={x:Static local:Loc.Untitled}}" Height="450" Width="800" MinHeight="450" MinWidth="800">
+  <Window.Resources>
+    <!-- Selects the container style per toolbar item type: plain button or toggle -->
+    <nx:ToolBarItemStyleSelector x:Key="ToolBarItemStyleSelector"
+                                 DefaultStyle="{StaticResource Styles.ToolBarItem.Default}"
+                                 ToggleStyle="{StaticResource Styles.ToolBarItem.Toggle.Interactive}" />
+  </Window.Resources>
   <nx:Interaction.Behaviors>
     <nx:WindowService ClosingCommand="{Binding ClosingCommand}"/>
     <nx:InputDialogService MessageBoxButtonLocalizer="{StaticResource MessageBoxButtonLocalizer}"
@@ -53,7 +59,11 @@
       <RowDefinition Height="Auto"/>
     </Grid.RowDefinitions>
 
-    <Menu Grid.Row="0" ItemsSource="{Binding MenuItems}" ItemContainerStyle="{StaticResource Styles.MenuItem.Default}"/>
+    <DockPanel Grid.Row="0">
+      <Menu DockPanel.Dock="Left" ItemsSource="{Binding MenuItems}" ItemContainerStyle="{StaticResource Styles.MenuItem.Default}"/>
+      <ToolBar ItemsSource="{Binding ToolBarItems}"
+               ItemContainerStyleSelector="{StaticResource ToolBarItemStyleSelector}"/>
+    </DockPanel>
 
     <controlzex:TabControlEx Grid.Row="1" TabStripPlacement="Top">
       <nx:Interaction.Behaviors>

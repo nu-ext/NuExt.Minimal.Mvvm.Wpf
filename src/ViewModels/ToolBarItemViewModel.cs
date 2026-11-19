@@ -21,24 +21,6 @@ public partial class ToolBarItemViewModel : BindableBase
     private object? _commandParameter;
 
     /// <summary>
-    /// Gets or sets the command invoked when the toolbar item becomes checked.
-    /// </summary>
-    [Notify]
-    private ICommand? _checkedCommand;
-
-    /// <summary>
-    /// Gets or sets the command invoked when the toolbar item becomes unchecked.
-    /// </summary>
-    [Notify]
-    private ICommand? _uncheckedCommand;
-
-    /// <summary>
-    /// Gets or sets the command invoked when the toolbar item enters the indeterminate state.
-    /// </summary>
-    [Notify]
-    private ICommand? _indeterminateCommand;
-
-    /// <summary>
     /// Gets or sets the header displayed by the toolbar item.
     /// </summary>
     [Notify]
@@ -55,19 +37,6 @@ public partial class ToolBarItemViewModel : BindableBase
     /// </summary>
     [Notify]
     private bool _isEnabled = true;
-
-    /// <summary>
-    /// Gets or sets a value indicating whether the toolbar item is checked.
-    /// <see langword="null"/> represents the indeterminate state.
-    /// </summary>
-    [Notify]
-    private bool? _isChecked;
-
-    /// <summary>
-    /// Gets or sets a value indicating whether the toolbar item supports the indeterminate state.
-    /// </summary>
-    [Notify]
-    private bool _isThreeState;
 
     /// <summary>
     /// Gets or sets the tooltip displayed for the toolbar item.

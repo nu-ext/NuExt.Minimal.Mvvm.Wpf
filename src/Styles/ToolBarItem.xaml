@@ -31,7 +31,7 @@
   </DataTemplate>
 
   <!-- Toggle toolbar item template -->
-  <DataTemplate x:Key="Templates.ToolBarItem.Toggle" DataType="{x:Type wpf:ToolBarItemViewModel}">
+  <DataTemplate x:Key="Templates.ToolBarItem.Toggle" DataType="{x:Type wpf:ToggleToolBarItemViewModel}">
     <ToggleButton Style="{DynamicResource {x:Static ToolBar.ToggleButtonStyleKey}}"
                   CommandParameter="{Binding CommandParameter}"
                   Command="{Binding Command}"
@@ -57,7 +57,7 @@
   </DataTemplate>
 
   <!-- Checked/unchecked/indeterminate event behaviors for toggle toolbar items -->
-  <DataTemplate x:Key="Behaviors.ToolBarItem.Toggle" DataType="{x:Type wpf:ToolBarItemViewModel}">
+  <DataTemplate x:Key="Behaviors.ToolBarItem.Toggle" DataType="{x:Type wpf:ToggleToolBarItemViewModel}">
     <ItemsControl>
       <nx:EventToCommand Event="{x:Static ToggleButton.CheckedEvent}"
                          Command="{Binding CheckedCommand}"
