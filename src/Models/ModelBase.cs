@@ -15,7 +15,7 @@ namespace Minimal.Mvvm;
 /// It leverages reflection to manage properties and provides methods to get property types, initialize the object,
 /// and set property values dynamically.
 /// </summary>
-public abstract class ModelBase : BindableBase
+public abstract class ModelBase : BindableBase, IInitializable
 {
     private static readonly ConcurrentDictionary<Type, IReadOnlyDictionary<string, PropertyInfo>> s_typeProperties = new();
 
