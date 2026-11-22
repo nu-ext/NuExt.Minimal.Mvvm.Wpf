@@ -31,7 +31,7 @@ partial class MoviesViewModel
         Debug.Assert(IsInitialized, $"{GetType().FullName} ({DisplayName ?? "Unnamed"}) ({GetHashCode()}) is not initialized.");
         Debug.Assert(SettingsService != null, $"{nameof(SettingsService)} is null");
         Debug.Assert(Settings != null, $"{nameof(Settings)} is null");
-        using (Settings!.SuspendDirty())
+        using (Settings!.SuspendChangeTracking())
         {
             SettingsService!.LoadSettings(Settings);
         }
@@ -41,9 +41,9 @@ partial class MoviesViewModel
     {
         Debug.Assert(SettingsService != null, $"{nameof(SettingsService)} is null");
         Debug.Assert(Settings != null, $"{nameof(Settings)} is null");
-        if (Settings!.IsDirty && SettingsService!.SaveSettings(Settings))
+        if (Settings!.IsChanged && SettingsService!.SaveSettings(Settings))
         {
-            Settings.ResetDirty();
+            Settings.AcceptChanges();
         }
     }
 

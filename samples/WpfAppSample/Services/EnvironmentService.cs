@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using Minimal.Mvvm;
 using Minimal.Mvvm.Wpf;
 
 namespace MovieWpfApp.Services;

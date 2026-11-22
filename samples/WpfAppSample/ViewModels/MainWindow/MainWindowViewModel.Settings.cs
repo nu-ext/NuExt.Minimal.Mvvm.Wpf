@@ -30,7 +30,7 @@ internal partial class MainWindowViewModel
     {
         Debug.Assert(IsInitialized, $"{GetType().FullName} ({DisplayName ?? "Unnamed"}) ({GetHashCode()}) is not initialized.");
         Debug.Assert(Settings != null, $"{nameof(Settings)} is null");
-        using (Settings!.SuspendDirty())
+        using (Settings!.SuspendChangeTracking())
         {
             SettingsService.LoadSettings(Settings);
         }
@@ -39,9 +39,9 @@ internal partial class MainWindowViewModel
     private void SaveSettings()
     {
         Debug.Assert(Settings != null, $"{nameof(Settings)} is null");
-        if (Settings!.IsDirty && SettingsService.SaveSettings(Settings))
+        if (Settings!.IsChanged && SettingsService.SaveSettings(Settings))
         {
-            Settings.ResetDirty();
+            Settings.AcceptChanges();
         }
     }
 
