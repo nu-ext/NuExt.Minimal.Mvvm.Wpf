@@ -113,7 +113,7 @@ public class SettingsService : ServiceBase<FrameworkElement>, ISettingsService
                 var json = File.ReadAllText(filePath);
                 if (!string.IsNullOrEmpty(json))
                 {
-                    var additionalData = JsonObjectStateSerializer.Deserialize(json, settings.GetPropertyType, settings.SetProperty, options);
+                    var additionalData = JsonObjectStateSerializer.Deserialize(json, settings, options);
                     if (additionalData != null)
                     {
                         if (settings.AdditionalData == null)
