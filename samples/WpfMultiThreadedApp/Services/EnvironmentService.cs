@@ -1,5 +1,5 @@
 ﻿using System.IO;
-using Minimal.Mvvm.Wpf;
+using Minimal.Mvvm;
 
 namespace WpfMultiThreadedApp.Services;
 
