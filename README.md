@@ -171,6 +171,46 @@ protected override async Task InitializeAsyncCore(CancellationToken cancellation
 
 Cleanup operations are executed in reverse registration order. Register resources in acquisition order so dependent resources are released before the resources they depend on.
 
+## Converters
+
+The package ships a small set of `IValueConverter` implementations for the conditions that appear in almost every View: booleans, numbers, enumeration members, and text. They follow one convention: a value that cannot be converted produces a neutral result (`false` or `Collapsed`) instead of an exception, while a missing or invalid `ConverterParameter` is a configuration error and throws `InvalidOperationException`.
+
+| Converter | Typical use | Options |
+|---|---|---|
+| `BooleanToVisibilityConverter` | Show or hide an element by a flag | `HideInsteadOfCollapse`, `Invert`, two-way |
+| `BooleanInverterConverter` | Negate a flag (`IsReadOnly`, `IsEnabled`) | two-way |
+| `NumericToBooleanConverter` | `Count > 0`, `SelectedIndex >= 0`, "not zero" | `Comparison`, `Invert` |
+| `NumericToVisibilityConverter` | The same conditions mapped to `Visibility` | `Comparison`, `HideInsteadOfCollapse`, `Invert` |
+| `EnumToBooleanConverter` | `RadioButton`/`MenuItem` `IsChecked` bound to one enum property | `Invert` (one-way only) |
+| `EnumToVisibilityConverter` | Show the panel that matches the selected enum member | `HideInsteadOfCollapse`, `Invert` |
+| `StringToVisibilityConverter` | Hide placeholders and hints when there is no text | `HideInsteadOfCollapse`, `Invert` |
+
+```xml
+<Window
+  xmlns:nx="http://schemas.nuext.minimal/xaml">
+  <Window.Resources>
+    <nx:NumericToVisibilityConverter x:Key="ShowIfAny" Comparison="GreaterThan"/>
+    <nx:EnumToBooleanConverter x:Key="EnumToBoolean"/>
+    <nx:StringToVisibilityConverter x:Key="ShowIfText"/>
+  </Window.Resources>
+
+  <!-- Visible while the tab strip contains more than one document -->
+  <TabControl Visibility="{Binding Documents.Count, Converter={StaticResource ShowIfAny}, ConverterParameter=1}"/>
+
+  <!-- Both radio buttons share a single Mode property -->
+  <RadioButton GroupName="Mode" Content="Edit"
+               IsChecked="{Binding Mode, Converter={StaticResource EnumToBoolean}, ConverterParameter=Edit}"/>
+  <RadioButton GroupName="Mode" Content="Review"
+               IsChecked="{Binding Mode, Converter={StaticResource EnumToBoolean}, ConverterParameter=Review}"/>
+
+  <!-- The hint is hidden as soon as StatusMessage has text -->
+  <TextBlock Text="{Binding StatusMessage}"
+             Visibility="{Binding StatusMessage, Converter={StaticResource ShowIfText}}"/>
+</Window>
+```
+
+`EnumToBooleanConverter` converts back with `Binding.DoNothing` when a radio button is unchecked, so the shared property is not cleared while the group switches between members. For more than one condition, or when the rule belongs to the ViewModel, a computed property or a `Style` trigger stays clearer than a chain of converters.
+
 ## View location (predictable, overridable)
 
 Views are resolved in a strict order by the window/document services:
