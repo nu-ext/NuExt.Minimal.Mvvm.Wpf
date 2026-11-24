@@ -35,31 +35,7 @@ public sealed class NumericToBooleanConverter : ValueConverterBase<object?, bool
             return false;
         }
 
-        bool result;
-        if (Comparison == NumberComparison.NonZero)
-        {
-            result = number != 0m;
-        }
-        else
-        {
-            if (parameter is not { } threshold)
-            {
-                throw new InvalidOperationException(
-                    $"{nameof(NumericToBooleanConverter)} requires a numeric converter parameter for the '{Comparison}' comparison.");
-            }
-
-            result = Comparison switch
-            {
-                NumberComparison.Equal => number == threshold,
-                NumberComparison.NotEqual => number != threshold,
-                NumberComparison.GreaterThan => number > threshold,
-                NumberComparison.GreaterThanOrEqual => number >= threshold,
-                NumberComparison.LessThan => number < threshold,
-                NumberComparison.LessThanOrEqual => number <= threshold,
-                _ => throw new ArgumentOutOfRangeException(nameof(Comparison))
-            };
-        }
-
+        bool result = Comparison.Evaluate(number, parameter);
         return Invert ? !result : result;
     }
 }
