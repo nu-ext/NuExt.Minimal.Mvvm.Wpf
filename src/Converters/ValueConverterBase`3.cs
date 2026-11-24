@@ -29,10 +29,11 @@ namespace Minimal.Mvvm.Wpf;
 /// <para>
 /// Both directions validate the binding type with the target type check of the cast helper, which requires the type
 /// to be assignable from the non-nullable <typeparamref name="TTo"/> (in <c>Convert</c>) or
-/// <typeparamref name="TFrom"/> (in <c>ConvertBack</c>). Consequently a nullable target such as <c>bool?</c>
-/// (<c>ToggleButton.IsChecked</c>), a source property with a more specific type than <typeparamref name="TFrom"/>,
-/// and returning <c>Binding.DoNothing</c> cannot be expressed through this base class; such converters implement
-/// <see cref="IValueConverter"/> directly, like <see cref="EnumToBooleanConverter"/>.
+/// <typeparamref name="TFrom"/> (in <c>ConvertBack</c>). Nullable value types are compared by their underlying type,
+/// so a <c>bool?</c> target such as <c>ToggleButton.IsChecked</c> is supported. A source property with a more
+/// specific type than <typeparamref name="TFrom"/>, and returning <c>Binding.DoNothing</c>, still cannot be expressed
+/// through this base class; such converters implement <see cref="IValueConverter"/> directly, like
+/// <see cref="EnumToBooleanConverter"/>.
 /// </para>
 /// </remarks>
 public abstract class ValueConverterBase<TFrom, TTo, TParameter> : IValueConverter

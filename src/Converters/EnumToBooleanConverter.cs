@@ -58,10 +58,7 @@ public sealed class EnumToBooleanConverter : IValueConverter
     /// </exception>
     object IValueConverter.Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (targetType != typeof(bool) && targetType != typeof(bool?))
-        {
-            throw new InvalidCastException($"Type 'bool' cannot be assigned to target type '{targetType}'.");
-        }
+        Cast<bool>.ValidateTargetType(targetType);
 
         if (value is not Enum enumValue)
         {
