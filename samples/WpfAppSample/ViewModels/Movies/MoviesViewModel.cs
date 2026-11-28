@@ -37,7 +37,7 @@ internal sealed partial class MoviesViewModel : DocumentContentViewModelBase
 
     private new MainWindowViewModel ParentViewModel => GetParentViewModel<MainWindowViewModel>();
 
-    private SettingsService? SettingsService => GetService<SettingsService>();
+    private SettingsService SettingsService => GetRequiredService<SettingsService>();
 
     #endregion
 

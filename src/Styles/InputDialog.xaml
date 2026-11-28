@@ -5,8 +5,10 @@
                     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                     mc:Ignorable="d">
 
+    <!-- Gap to the previous button only: the outer gaps around the whole row are owned by
+         InputDialogContent.ButtonRowMargin, so the row stays evenly inset on every side. -->
     <DataTemplate x:Key="Templates.InputDialog.Button.Default" d:DataType="{x:Type nx:UICommand}">
-        <Button Margin="0 5 5 5" MinHeight="25" MinWidth="50" UseLayoutRounding="True"
+        <Button Margin="8,0,0,0" MinHeight="25" MinWidth="50" UseLayoutRounding="True"
                 Command="{Binding Command}"
                 Content="{Binding Content}"
                 IsCancel="{Binding IsCancel}"
@@ -14,7 +16,7 @@
     </DataTemplate>
 
     <DataTemplate x:Key="Templates.InputDialog.Button" d:DataType="{x:Type nx:UICommand}">
-        <Button Margin="0 5 5 5" MinHeight="25" MinWidth="50" UseLayoutRounding="True"
+        <Button Margin="8,0,0,0" MinHeight="25" MinWidth="50" UseLayoutRounding="True"
                 Command="{Binding Command}"
                 Content="{Binding Content}"
                 IsCancel="{Binding IsCancel}"

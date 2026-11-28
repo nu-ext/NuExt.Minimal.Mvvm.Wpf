@@ -31,7 +31,8 @@ public class WindowHelper
         nameof(ViewWindowService.WindowStyleSelector), typeof(StyleSelector), typeof(WindowHelper));
 
     public static readonly DependencyProperty WindowTypeProperty = DependencyProperty.RegisterAttached(
-        nameof(ViewWindowService.WindowType), typeof(Type), typeof(WindowHelper));
+        nameof(ViewWindowService.WindowType), typeof(Type), typeof(WindowHelper),
+        new FrameworkPropertyMetadata(null), ValidateWindowType);
 
     public static bool GetSetWindowOwner(DependencyObject obj)
         => (bool)obj.GetValue(SetWindowOwnerProperty);
@@ -63,9 +64,23 @@ public class WindowHelper
     public static void SetWindowStyleSelector(DependencyObject obj, StyleSelector? value)
         => obj.SetValue(WindowStyleSelectorProperty, value);
 
+    /// <summary>
+    /// Validates that the window type is a <see cref="Window"/>: the value is used as
+    /// <c>(Window)Activator.CreateInstance(windowType)</c>, and a wrong type would fail much later.
+    /// </summary>
+    private static bool ValidateWindowType(object? value)
+        => value is not Type windowType || typeof(Window).IsAssignableFrom(windowType);
+
+    /// <summary>
+    /// Gets the type of window to create; <see langword="null"/> means a plain <see cref="Window"/>.
+    /// </summary>
     public static Type? GetWindowType(DependencyObject obj)
         => (Type?)obj.GetValue(WindowTypeProperty);
 
+    /// <summary>
+    /// Sets the type of window to create. The type must derive from <see cref="Window"/> and have
+    /// a parameterless constructor; an invalid type is rejected when the value is set.
+    /// </summary>
     public static void SetWindowType(DependencyObject obj, Type? value)
         => obj.SetValue(WindowTypeProperty, value);
 
