@@ -10,6 +10,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
 using Minimal.Mvvm.Wpf.Controls;
+using Presentation.Wpf;
 
 namespace Minimal.Mvvm.Wpf;
 
@@ -52,6 +53,12 @@ public class InputDialogService : DialogServiceBase, IAsyncDialogService
     /// </summary>
     public static readonly DependencyProperty ButtonRowMarginProperty = DependencyProperty.Register(
         nameof(ButtonRowMargin), typeof(Thickness), typeof(InputDialogService), new PropertyMetadata(new Thickness(12)));
+
+    /// <summary>
+    /// Identifies the <see cref="ShowIcon"/> dependency property.
+    /// </summary>
+    public static readonly DependencyProperty ShowIconProperty = DependencyProperty.Register(
+        nameof(ShowIcon), typeof(bool), typeof(InputDialogService), new PropertyMetadata(false));
 
     /// <summary>
     /// Identifies the <see cref="ButtonTemplate"/> dependency property.
@@ -148,6 +155,16 @@ public class InputDialogService : DialogServiceBase, IAsyncDialogService
     {
         get => WindowHelper.GetSetWindowOwner(this);
         set => WindowHelper.SetSetWindowOwner(this, value);
+    }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the dialog window shows the application icon in its caption.
+    /// The default is <see langword="false"/>: the caption starts right at the title text, as in WinUI dialogs.
+    /// </summary>
+    public bool ShowIcon
+    {
+        get => (bool)GetValue(ShowIconProperty);
+        set => SetValue(ShowIconProperty, value);
     }
 
     /// <summary>
@@ -303,8 +320,23 @@ public class InputDialogService : DialogServiceBase, IAsyncDialogService
 
         // Local values beat any style setter, so the plain dialog stays content-sized in every theme:
         // under Application.ThemeMode the window visuals come from the theme style.
+        // The icon is removed at the Win32 level, not by setting Window.Icon: an empty Icon still makes
+        // the caption reserve the icon slot. SourceInitialized is fine here because the style is what
+        // removes the slot: WPF may set its default icons afterwards, but the caption no longer has an
+        // icon area. The style and the cleared icons belong to the HWND, and WPF keeps the same HWND on
+        // a DPI change (it handles WM_DPICHANGED itself), so nothing has to be repeated there.
         // UseLayoutRounding is the modern way to keep edges crisp at fractional DPI; SnapsToDevicePixels
         // is the pre-4.0 legacy of the same idea, and mixing the two is explicitly discouraged.
+        if (!ShowIcon)
+        {
+            window.SourceInitialized += OnDialogSourceInitialized;
+
+            void OnDialogSourceInitialized(object? sender, EventArgs e)
+            {
+                window.SourceInitialized -= OnDialogSourceInitialized;
+                window.RemoveIcon();
+            }
+        }
         window.SizeToContent = SizeToContent.WidthAndHeight;
         window.ResizeMode = ResizeMode.NoResize;
         window.ShowInTaskbar = false;
